@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/debug")
 @RequiredArgsConstructor
-@Tag(name = "디버깅 API", description = "개발용 디버깅 API")
+@Tag(name = "백엔드 디버깅 API", description = "프론트 측에서는 쓰지 않습니다.")
 public class DebugController {
 
     private final UserRepository userRepository;
