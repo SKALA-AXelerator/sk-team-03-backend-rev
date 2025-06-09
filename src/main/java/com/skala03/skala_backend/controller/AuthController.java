@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "인증 API", description = "로그인, 토큰 재발급 등 인증 관련 API")
 public class AuthController {
