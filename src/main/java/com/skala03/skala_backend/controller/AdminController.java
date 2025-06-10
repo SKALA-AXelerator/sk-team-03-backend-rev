@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
-@Tag(name = "Admin API", description = "관리자 기능 - 키워드 관리")
+@Tag(name = "관리자 API", description = "관리자 기능 - 키워드 관리")
 public class AdminController {
 
     @Autowired
