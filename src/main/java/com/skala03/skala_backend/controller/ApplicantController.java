@@ -68,48 +68,88 @@ public class ApplicantController {
         }
     }
 
-    // 지원자 상태 업데이트 (면접관, 방 정보 + 면접 상태 포함)
-    @PutMapping("/update-status")
-    @Operation(summary = "지원자 상태 업데이트", description = "지원자의 면접 상태 정보를 업데이트합니다.")
+//    // 지원자 수동 추가 후 DB 처리 메서드
+//    @PutMapping("/direct-add")
+//    @Operation(summary = "지원자를 직접 골라서 면접에 추가", description = "특정 지원자를 선택해서 면접에 추가합니다.")
+//    public ResponseEntity<?> directAddApplicant(
+//            @RequestBody ApplicantDto.DetailedStatusUpdateRequest request) {
+//        try {
+//            applicantService.directAddApplicant(request);
+//            return ResponseEntity.ok().build();
+//        } catch (RuntimeException e) {
+//            // 잘못된 상태값인 경우 400 Bad Request 반환
+//            if (e.getMessage().contains("Invalid interview status")) {
+//                return ResponseEntity.badRequest().body(e.getMessage());
+//            }
+//            return ResponseEntity.internalServerError().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
+
+    // 개별 지원자 상태 변경
+    @PutMapping("/{applicantId}/status")
+    @Operation(summary = "개별 지원자 면접 상태 수정", description = "개별 지원자의 면접 상태를 수정합니다.")
     public ResponseEntity<?> updateApplicantStatus(
-            @RequestBody ApplicantDto.DetailedStatusUpdateRequest request) {
+            @PathVariable String applicantId,
+            @RequestBody ApplicantDto.StatusChangeRequest request) {
         try {
-            applicantService.updateApplicantStatus(request);
-            return ResponseEntity.ok().build();
+            ApplicantDto.StatusChangeResponse response = applicantService.updateApplicantStatus(applicantId, request);
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            // 잘못된 상태값인 경우 400 Bad Request 반환
-            if (e.getMessage().contains("Invalid interview status")) {
-                return ResponseEntity.badRequest().body(e.getMessage());
+            // 지원자 없음 에러
+            if (e.getMessage().contains("Applicant not found")) {
+                return ResponseEntity.status(404).body("Applicant not found");
             }
-            return ResponseEntity.internalServerError().build();
+
+            // 잘못된 상태값 에러
+            if (e.getMessage().contains("Invalid interview status")) {
+                return ResponseEntity.status(400).body("Invalid interview status");
+            }
+
+            // 기타 에러
+            return ResponseEntity.status(500).body("Internal server error");
+        }
+    }
+
+    // ===== 추가 편의 API들 =====
+
+    // 세션별 지원자 조회
+    @GetMapping("/session/{sessionId}")
+    @Operation(summary = "특정 세션의 지원자 조회", description = "특정 세션의 지원자 리스트를 조회합니다.")
+    public ResponseEntity<List<ApplicantDto.ApplicantInfo>> getApplicantsBySession(
+            @PathVariable Integer sessionId) {
+        try {
+            List<ApplicantDto.ApplicantInfo> response = applicantService.getApplicantsBySession(sessionId);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-//    // ===== 추가 편의 API들 =====
-//
-//    // 세션별 지원자 조회
-//    @GetMapping("/session/{sessionId}")
-//    public ResponseEntity<List<ApplicantDto.ApplicantInfo>> getApplicantsBySession(
-//            @PathVariable Integer sessionId) {
-//        try {
-//            List<ApplicantDto.ApplicantInfo> response = applicantService.getApplicantsBySession(sessionId);
-//            return ResponseEntity.ok(response);
-//        } catch (Exception e) {
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
-//
-//    // 직무별 지원자 조회
-//    @GetMapping("/job-role/{jobRoleId}")
-//    public ResponseEntity<List<ApplicantDto.ApplicantInfo>> getApplicantsByJobRole(
-//            @PathVariable String jobRoleId) {
-//        try {
-//            List<ApplicantDto.ApplicantInfo> response = applicantService.getApplicantsByJobRole(jobRoleId);
-//            return ResponseEntity.ok(response);
-//        } catch (Exception e) {
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
+    // 직무별 지원자 조회
+    @GetMapping("/job-role/{jobRoleId}")
+    @Operation(summary = "특정 직무에 지원한 지원자 조회", description = "특정 직무에 지원한 지원자 리스트를 조회합니다.")
+    public ResponseEntity<List<ApplicantDto.ApplicantInfo>> getApplicantsByJobRole(
+            @PathVariable String jobRoleId) {
+        try {
+            List<ApplicantDto.ApplicantInfo> response = applicantService.getApplicantsByJobRole(jobRoleId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 세션 재편성 (지원자 수동 선택해서 새 세션 생성)
+    @PostMapping("/sessions/reorganize")
+    @Operation(summary = "세션 재편성", description = "선택된 지원자들로 새 세션을 만들고 기존 세션들을 재구성합니다.")
+    public ResponseEntity<ApplicantDto.SessionReorganizeResponse> reorganizeSessions(
+            @RequestBody ApplicantDto.SessionReorganizeRequest request) {
+        try {
+            ApplicantDto.SessionReorganizeResponse response = applicantService.reorganizeSessions(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

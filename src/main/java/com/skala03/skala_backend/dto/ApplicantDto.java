@@ -50,7 +50,7 @@ public class ApplicantDto {
     @Data
     @NoArgsConstructor
     public static class EvaluationRequest {
-        private List<BasicInfo> applicants;
+        private List<String> applicantIds;  // BasicInfo 대신 ID 리스트만
         private String interviewText;
     }
 
@@ -67,7 +67,7 @@ public class ApplicantDto {
     @AllArgsConstructor
     public static class EvaluationResponse {
         private String id;
-        private String name;
+        private String name;  // 서버에서 ID로 조회하여 반환
         private List<KeywordEvaluation> evaluations;
         private String summaryUrl;
     }
@@ -96,5 +96,47 @@ public class ApplicantDto {
         private List<String> applicantIds;
         private String room;
         private String interviewStatus;  // 추가: 변경할 면접 상태
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class StatusChangeRequest {
+        private String interviewStatus;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class StatusChangeResponse {
+        private String applicantId;
+        private String currentStatus;
+        private String message;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class SessionReorganizeRequest {
+        private List<String> selectedApplicantIds; // 새 세션에 포함할 지원자들
+        private String roomId;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class SessionReorganizeResponse {
+        private Integer newSessionId;
+        private List<String> newSessionApplicants;
+        private List<SessionUpdateInfo> updatedSessions;
+        private String message;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class SessionUpdateInfo {
+        private Integer sessionId;
+        private List<String> remainingApplicants;
+//        private String action; // "updated" or "deleted"
     }
 }

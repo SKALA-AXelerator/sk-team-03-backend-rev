@@ -9,9 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Arrays;
 
 @Service
 @Transactional
@@ -19,6 +18,7 @@ public class ApplicantService {
 
     @Autowired
     private ApplicantRepository applicantRepository;
+
 
     // 전체 지원자 리스트 조회
     @Transactional(readOnly = true)
@@ -30,23 +30,20 @@ public class ApplicantService {
         return new ApplicantDto.ListResponse(applicantInfos);
     }
 
-    // 지원자별 질문 리스트 조회
+    // 지원자별 질문 리스트 조회 (수정된 버전)
     @Transactional(readOnly = true)
     public ApplicantDto.QuestionsResponse getApplicantQuestions(ApplicantDto.QuestionsRequest request) {
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(request.getApplicantIds());
 
         List<ApplicantDto.QuestionInfo> questionList = applicants.stream()
                 .map(applicant -> {
-                    // TODO: 실제 질문 데이터는 Question 서비스에서 가져와야 함
-                    List<String> mockQuestions = Arrays.asList(
-                            applicant.getApplicantName() + "님, 자기소개를 해주세요.",
-                            applicant.getApplicantName() + "님의 강점은 무엇인가요?",
-                            applicant.getApplicantName() + "님이 지원한 이유는 무엇인가요?"
-                    );
+                    // 실제 DB에서 지원자별 질문 조회
+                    List<String> questions = applicantRepository.findQuestionsByApplicantId(applicant.getApplicantId());
+
                     return new ApplicantDto.QuestionInfo(
                             applicant.getApplicantId(),
                             applicant.getApplicantName(),
-                            mockQuestions
+                            questions
                     );
                 })
                 .collect(Collectors.toList());
@@ -54,45 +51,47 @@ public class ApplicantService {
         return new ApplicantDto.QuestionsResponse(questionList);
     }
 
-    // 지원자 평가 (AI 분석)
+    // 지원자 평가 (AI 분석) - DB 데이터 사용 버전
     public List<ApplicantDto.EvaluationResponse> evaluateApplicants(ApplicantDto.EvaluationRequest request) {
-        List<String> applicantIds = request.getApplicants().stream()
-                .map(ApplicantDto.BasicInfo::getId)
-                .collect(Collectors.toList());
-
+        List<String> applicantIds = request.getApplicantIds();
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(applicantIds);
 
         return applicants.stream()
                 .map(applicant -> {
-                    // TODO: 실제 AI 분석 로직 구현 필요
-                    List<ApplicantDto.KeywordEvaluation> mockEvaluations = Arrays.asList(
-                            new ApplicantDto.KeywordEvaluation("의사소통", 4, "명확하고 논리적인 의사소통 능력을 보여줌"),
-                            new ApplicantDto.KeywordEvaluation("문제해결능력", 5, "복잡한 문제에 대한 창의적 해결책 제시"),
-                            new ApplicantDto.KeywordEvaluation("팀워크", 3, "협업 경험은 있으나 구체적 사례 부족"),
-                            new ApplicantDto.KeywordEvaluation("적극성", 4, "업무에 대한 적극적인 자세를 보임")
-                    );
+                    // 실제 DB에서 키워드 점수 조회
+                    List<Object[]> keywordScores = applicantRepository.findKeywordScoresByApplicantId(applicant.getApplicantId());
+
+                    List<ApplicantDto.KeywordEvaluation> evaluations = keywordScores.stream()
+                            .map(row -> new ApplicantDto.KeywordEvaluation(
+                                    (String) row[0],    // keyword_name
+                                    ((Number) row[1]).intValue(),  // applicant_score
+                                    (String) row[2]     // score_comment
+                            ))
+                            .collect(Collectors.toList());
 
                     // TODO: S3 presigned URL 생성 로직 구현 필요
                     String summaryUrl = "https://example-s3-bucket.com/summaries/" + applicant.getApplicantId() + ".txt";
 
-                    // 평가 점수 업데이트 (선택사항)
-                    Float totalScore = (float) mockEvaluations.stream()
-                            .mapToInt(ApplicantDto.KeywordEvaluation::getScore)
-                            .average()
-                            .orElse(0.0);
-                    applicant.setTotalScore(totalScore);
+                    // 평가 점수 업데이트 (실제 점수 평균으로)
+                    if (!evaluations.isEmpty()) {
+                        Float totalScore = (float) evaluations.stream()
+                                .mapToInt(ApplicantDto.KeywordEvaluation::getScore)
+                                .average()
+                                .orElse(0.0);
+                        applicant.setTotalScore(totalScore);
+                    }
 
                     return new ApplicantDto.EvaluationResponse(
                             applicant.getApplicantId(),
                             applicant.getApplicantName(),
-                            mockEvaluations,
+                            evaluations,
                             summaryUrl
                     );
                 })
                 .collect(Collectors.toList());
     }
 
-    // 면접 완료 상태로 변경
+    // 면접 종료 후 모든 면접자 완료 상태로 변경
     public void updateToInterviewComplete(ApplicantDto.StatusUpdateRequest request) {
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(request.getApplicationIds());
 
@@ -104,8 +103,8 @@ public class ApplicantService {
         applicantRepository.saveAll(applicants);
     }
 
-    // 지원자 상태 업데이트 (면접관, 방 정보 + 면접 상태 포함)
-    public void updateApplicantStatus(ApplicantDto.DetailedStatusUpdateRequest request) {
+    // 지원자 수동 추가 후 DB 처리 메서드
+    public void directAddApplicant(ApplicantDto.DetailedStatusUpdateRequest request) {
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(request.getApplicantIds());
 
         // 요청으로 받은 상태 문자열을 InterviewStatus enum으로 변환
@@ -174,5 +173,127 @@ public class ApplicantService {
         return applicants.stream()
                 .map(a -> new ApplicantDto.ApplicantInfo(a.getApplicantId(), a.getApplicantName()))
                 .collect(Collectors.toList());
+    }
+
+    // 개별 지원자 상태 변경
+    public ApplicantDto.StatusChangeResponse updateApplicantStatus(String applicantId, ApplicantDto.StatusChangeRequest request) {
+        // 지원자 존재 여부 확인
+        Applicant applicant = applicantRepository.findById(applicantId)
+                .orElseThrow(() -> new RuntimeException("Applicant not found: " + applicantId));
+
+        // 이전 상태 저장
+        String previousStatus = applicant.getInterviewStatus().name();
+
+        // 요청으로 받은 상태 문자열을 InterviewStatus enum으로 변환
+        InterviewStatus newStatus;
+        try {
+            newStatus = InterviewStatus.valueOf(request.getInterviewStatus().toLowerCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid interview status: " + request.getInterviewStatus() +
+                    ". Valid values are: waiting, completed, absent");
+        }
+
+        // 상태 업데이트
+        applicant.setInterviewStatus(newStatus);
+
+        // 상태별 시간 기록
+        LocalDateTime now = LocalDateTime.now();
+        switch (newStatus) {
+            case waiting:
+                // 대기 상태로 변경 시 시작/완료 시간 초기화 (선택사항)
+                break;
+            case completed:
+                // 완료 상태로 변경 시 완료 시간 기록
+                applicant.setCompletedAt(now);
+                if (applicant.getStartedAt() == null) {
+                    applicant.setStartedAt(now);
+                }
+                break;
+            case absent:
+                // 불참 처리
+                break;
+        }
+
+        // 저장
+        applicantRepository.save(applicant);
+
+        // 응답 생성
+        String message = "Interview status updated successfully";
+
+        return new ApplicantDto.StatusChangeResponse(
+                applicantId,
+                newStatus.name(),
+                message
+        );
+    }
+
+    // 세션 재편성
+    @Transactional
+    public ApplicantDto.SessionReorganizeResponse reorganizeSessions(
+            ApplicantDto.SessionReorganizeRequest request) {
+
+        List<String> selectedApplicantIds = request.getSelectedApplicantIds();
+        String roomId = request.getRoomId();
+
+        // ✅ 새로 추가: roomId로 면접관들 조회
+        if (roomId == null || roomId.isEmpty()) {
+            throw new RuntimeException("Room ID is required");
+        }
+
+        List<String> roomInterviewers = applicantRepository.findUserIdsByRoomId(roomId);
+        if (roomInterviewers.isEmpty()) {
+            throw new RuntimeException("No interviewers found for room: " + roomId);
+        }
+
+        // 1. 선택된 지원자들의 기존 세션 정보 조회
+        List<Applicant> selectedApplicants = applicantRepository.findByApplicantIdIn(selectedApplicantIds);
+        Map<Integer, List<Applicant>> sessionGroups = selectedApplicants.stream()
+                .collect(Collectors.groupingBy(Applicant::getSessionId));
+
+        // 2. 새 세션 ID 생성
+        Integer newSessionId = applicantRepository.findMaxSessionId() + 1;
+
+        // 3. 새 세션 생성
+        String sessionName = "재편성된 세션 " + newSessionId;
+        String applicantIdsStr = String.join(",", selectedApplicantIds);
+        String interviewerIdsStr = String.join(",", roomInterviewers); // ✅ 자동 조회된 면접관들 사용
+        String rawDataPath = "/raw/data/session" + newSessionId + ".json";
+
+        applicantRepository.createNewSession(newSessionId, roomId, sessionName, interviewerIdsStr, applicantIdsStr, rawDataPath);
+
+        // 4. 선택된 지원자들을 새 세션으로 이동
+        selectedApplicants.forEach(applicant -> {
+            applicant.setSessionId(newSessionId);
+            applicant.setInterviewStatus(InterviewStatus.waiting); // 상태 초기화
+            applicant.setStartedAt(null);
+            applicant.setCompletedAt(null);
+        });
+        applicantRepository.saveAll(selectedApplicants);
+
+        List<ApplicantDto.SessionUpdateInfo> updatedSessions = new ArrayList<>();
+
+        // 5. 기존 세션들 재구성
+        for (Integer originalSessionId : sessionGroups.keySet()) {
+            // 해당 세션의 남은 지원자들 조회
+            List<Applicant> remainingApplicants = applicantRepository
+                    .findBySessionIdAndApplicantIdNotIn(originalSessionId, selectedApplicantIds);
+
+            // 남은 지원자들의 ID만 추출
+            List<String> remainingApplicantIds = remainingApplicants.stream()
+                    .map(Applicant::getApplicantId)
+                    .collect(Collectors.toList());
+
+            updatedSessions.add(new ApplicantDto.SessionUpdateInfo(
+                    originalSessionId,
+                    remainingApplicantIds
+            ));
+        }
+
+        return new ApplicantDto.SessionReorganizeResponse(
+                newSessionId,
+                selectedApplicantIds,
+                updatedSessions,
+                "Sessions reorganized successfully"
+        );
     }
 }
