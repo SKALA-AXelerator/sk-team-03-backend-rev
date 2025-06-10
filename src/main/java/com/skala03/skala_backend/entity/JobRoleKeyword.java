@@ -1,9 +1,14 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-// JobRoleKeyword
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "job_role_keywords")
 @IdClass(JobRoleKeywordId.class)
 public class JobRoleKeyword {
