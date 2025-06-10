@@ -3,10 +3,11 @@ package com.skala03.skala_backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-// Keyword Entity
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "keywords")
 public class Keyword {

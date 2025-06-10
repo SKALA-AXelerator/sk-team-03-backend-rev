@@ -44,7 +44,7 @@ public class ApplicantController {
 
     // 지원자 평가 (AI 분석)
     @PostMapping("/evaluations")
-    @Operation(summary = "지원자 평가 정보 조회", description = "지원자 평가 정보를 조회합니다")
+    @Operation(summary = "지원자 평가 정보 조회 (AI 필요)", description = "지원자 평가 정보를 조회합니다")
     public ResponseEntity<List<ApplicantDto.EvaluationResponse>> evaluateApplicants(
             @RequestBody ApplicantDto.EvaluationRequest request) {
         try {

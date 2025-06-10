@@ -1,9 +1,14 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-// KeywordCriteria
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "keyword_criteria")
 @IdClass(KeywordCriteriaId.class)
 public class KeywordCriteria {
@@ -13,7 +18,7 @@ public class KeywordCriteria {
 
     @Id
     @Column(name = "keyword_score")
-    private Integer keywordScore;  // Tinyint는 Integer로 맵핑 (범위 0~255)
+    private Integer keywordScore;
 
     @Column(name = "keyword_guideline", nullable = false)
     private String keywordGuideline;

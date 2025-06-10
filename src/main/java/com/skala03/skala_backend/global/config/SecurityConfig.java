@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // 인증 불필요한 경로
                         .requestMatchers("/api/auth/**").permitAll()  // 변경된 경로
                         .requestMatchers("/api/applicants/**").permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/debug/**").permitAll()
                         // Swagger 관련 경로
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
