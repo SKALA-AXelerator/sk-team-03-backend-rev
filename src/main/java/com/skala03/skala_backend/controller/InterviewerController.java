@@ -6,6 +6,7 @@ import com.skala03.skala_backend.dto.InterviewScheduleRequest;
 import com.skala03.skala_backend.dto.InterviewScheduleResponse;
 import com.skala03.skala_backend.service.InterviewerService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/interviewers")
+@Tag(name = "면접관 API", description = "면접관 기능 - 정보 확인")
 public class InterviewerController {
 
     private final InterviewerService interviewerService;
