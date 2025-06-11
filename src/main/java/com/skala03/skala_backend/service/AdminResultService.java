@@ -32,7 +32,7 @@ public class AdminResultService {
     private final KeywordRepository keywordRepository; // 추가
 
     public List<AdminResultDto> getJobRoleResults(String jobRoleId) {
-        List<Applicant> applicants = adminResultRepository.findCompletedApplicantsByJobRoleId(jobRoleId);
+        List<Applicant> applicants = adminResultRepository.findApplicantsByJobRoleId(jobRoleId);
 
         return applicants.stream()
                 .map(this::convertToDto)

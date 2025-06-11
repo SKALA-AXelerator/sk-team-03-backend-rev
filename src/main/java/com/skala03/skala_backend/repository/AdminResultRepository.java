@@ -14,7 +14,6 @@ public interface AdminResultRepository extends JpaRepository<Applicant, String> 
 
     @Query("SELECT a FROM Applicant a " +
             "JOIN FETCH a.jobRole jr " +
-            "WHERE jr.jobRoleId = :jobRoleId " +
-            "AND a.interviewStatus = 'completed'")
-    List<Applicant> findCompletedApplicantsByJobRoleId(@Param("jobRoleId") String jobRoleId);
+            "WHERE jr.jobRoleId = :jobRoleId ")
+    List<Applicant> findApplicantsByJobRoleId(@Param("jobRoleId") String jobRoleId);
 }
