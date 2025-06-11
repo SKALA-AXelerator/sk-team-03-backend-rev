@@ -5,6 +5,8 @@ import com.skala03.skala_backend.global.common.ApiResponse;
 import com.skala03.skala_backend.dto.TranscriptionResult;
 import com.skala03.skala_backend.service.TranscriptionService;
 import com.skala03.skala_backend.service.VitoAuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +21,17 @@ import java.nio.file.Paths;
 import java.time.Duration;
 
 @RestController
-@RequestMapping("/api/transcription")
+@RequestMapping("/api/interviewers/transcription")
+@Tag(name = "면접관 API")
 @RequiredArgsConstructor
+
 public class TranscriptionController {
 
     private final VitoAuthService vitoAuthService;
     private final TranscriptionService transcriptionService;
 
     @PostMapping("/upload-audio")
+    @Operation(summary = "음성 파일 업로드", description = "stt+화자 분리로 텍스트를 받아옵니다.")
     public Mono<ResponseEntity<ApiResponse<TranscriptionResult>>> uploadAudio(
             @RequestParam("file") MultipartFile file) throws IOException {
 
