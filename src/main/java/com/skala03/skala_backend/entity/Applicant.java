@@ -6,7 +6,9 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -58,7 +60,8 @@ public class Applicant {
     @Column(name = "next_checkpoint")
     private String nextCheckpoint;
 
-
+    @OneToMany(mappedBy = "applicant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InterviewContent> interviewContents = new ArrayList<>();
 
 }
 
