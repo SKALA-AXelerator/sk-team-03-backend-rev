@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -20,4 +23,8 @@ public class JobRole {
 
     @Column(name = "total_excel_path")
     private String totalExcelPath;
+
+
+    @OneToMany(mappedBy = "jobRole", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Applicant> applicants = new HashSet<>();
 }

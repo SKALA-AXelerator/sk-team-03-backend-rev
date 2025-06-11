@@ -22,4 +22,6 @@ public class JobRoleKeyword {
 
     @Column(name = "selected")
     private Boolean selected;
+
+
 }
