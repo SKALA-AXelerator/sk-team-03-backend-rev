@@ -1,10 +1,13 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 
 import java.time.LocalDateTime;
-
+@Getter
+@Setter
 @Entity
 @Table(name = "sessions")
 public class Session {
@@ -13,14 +16,27 @@ public class Session {
     @Column(name = "session_id")
     private Integer sessionId;
 
+    // ✅ 추가: 어떤 방에서 진행되는 세션인지
+    @Column(name = "room_id", nullable = false)
+    private String roomId;
+
+    // ✅ 추가: 세션명 (1회차, 2회차 등)
+    @Column(name = "session_name")
+    private String sessionName;
+
     @Column(name = "session_date", nullable = false)
     private LocalDateTime sessionDate;
 
     @Column(name = "session_location")
     private String sessionLocation;
 
-    @Column(name = "session_time")
+    @Column(name = "session_time", nullable = false)
     private LocalDateTime sessionTime;
+
+    // ✅ 추가: 세션 상태
+    @Enumerated(EnumType.STRING)
+    @Column(name = "session_status")
+    private SessionStatus sessionStatus = SessionStatus.scheduled;
 
     @Column(name = "interviewers_user_id", length = 100)
     private String interviewersUserId;
@@ -30,4 +46,14 @@ public class Session {
 
     @Column(name = "raw_data_path", columnDefinition = "TEXT")
     private String rawDataPath;
+
+    // ✅ 추가: InterviewRoom과의 연관관계 (선택사항)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", insertable = false, updatable = false)
+    private InterviewRoom room;
+
+    // ✅ 추가: SessionStatus enum
+    public enum SessionStatus {
+        scheduled, waiting, in_progress, completed, cancelled
+    }
 }

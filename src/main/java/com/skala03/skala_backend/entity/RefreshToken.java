@@ -1,16 +1,14 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
