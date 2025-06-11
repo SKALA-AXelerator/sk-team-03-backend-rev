@@ -68,4 +68,10 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
             "keywordScores.keyword"
     })
     List<Applicant> findAllByOrderByCompletedAtDesc();   // 가장 최근 결과가 먼저
+
+    // Repository에 추가할 메서드 (N+1 문제 방지를 위한 fetch join)
+// ApplicantRepository.java
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.jobRole WHERE a.applicantId IN :applicantIds")
+    List<Applicant> findByApplicantIdInWithJobRole(@Param("applicantIds") List<String> applicantIds);
+
 }
