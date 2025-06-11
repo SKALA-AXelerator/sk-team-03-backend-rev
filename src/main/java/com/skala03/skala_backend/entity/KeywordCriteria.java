@@ -12,6 +12,9 @@ import lombok.Setter;
 @Table(name = "keyword_criteria")
 @IdClass(KeywordCriteriaId.class)
 public class KeywordCriteria {
+
+
+
     @Id
     @Column(name = "keyword_id")
     private Integer keywordId;
