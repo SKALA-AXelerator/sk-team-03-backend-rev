@@ -1,6 +1,7 @@
 package com.skala03.skala_backend.repository;
 
 import com.skala03.skala_backend.entity.Applicant;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +18,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     @Query("SELECT a FROM Applicant a WHERE a.sessionId = :sessionId")
     List<Applicant> findBySessionId(@Param("sessionId") Integer sessionId);
 
-    @Query("SELECT a FROM Applicant a WHERE a.jobRoleId = :jobRoleId")
+    @Query("SELECT a FROM Applicant a WHERE a.jobRole = :jobRoleId")
     List<Applicant> findByJobRoleId(@Param("jobRoleId") String jobRoleId);
 
     // ===== 지원자별 질문 조회 메서드 추가 =====
@@ -51,4 +52,20 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
             "WHERE aks.applicant_id = :applicantId " +
             "ORDER BY k.keyword_id", nativeQuery = true)
     List<Object[]> findKeywordScoresByApplicantId(@Param("applicantId") String applicantId);
+    // 세션에 속한 지원자 전체 수
+    @Query("SELECT COUNT(a) FROM Applicant a WHERE a.sessionId = :sessionId")
+    int countBySessionId(@Param("sessionId") int sessionId);
+
+    // 세션에 속한 대기중 지원자 수
+    @Query("SELECT COUNT(a) FROM Applicant a WHERE a.sessionId = :sessionId AND a.interviewStatus = 'waiting'")
+    int countWaitingBySessionId(@Param("sessionId") int sessionId);
+
+    /** 모든 지원자 + 연관 엔티티 즉시 로딩 */
+    @EntityGraph(attributePaths = {
+            "jobRole",
+            "session",
+            "keywordScores",
+            "keywordScores.keyword"
+    })
+    List<Applicant> findAllByOrderByCompletedAtDesc();   // 가장 최근 결과가 먼저
 }
