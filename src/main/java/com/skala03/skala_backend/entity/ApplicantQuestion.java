@@ -1,9 +1,13 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 
 // ApplicantQuestion
+@Getter
+@Setter
 @Entity
 @Table(name = "applicant_questions")
 @IdClass(ApplicantQuestionId.class)

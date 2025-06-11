@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -31,6 +34,13 @@ public class User {
     @Column(name = "user_role", nullable = false)
     private Role userRole;
 
+    // 🏠 1:N – 방장으로서의 InterviewRoom
+    @OneToMany(mappedBy = "leader", fetch = FetchType.LAZY)
+    private Set<InterviewRoom> leaderRooms = new HashSet<>();
+
+    // 👥 1:N – RoomParticipants
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RoomParticipant> roomParticipants = new HashSet<>();
     public enum Role {
         admin, interviewer
     }
