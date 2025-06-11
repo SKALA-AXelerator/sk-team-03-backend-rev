@@ -1,14 +1,18 @@
 package com.skala03.skala_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "applicants")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Applicant {
@@ -24,8 +28,11 @@ public class Applicant {
     @Column(name = "interview_status", nullable = false)
     private InterviewStatus interviewStatus = InterviewStatus.waiting;  // pending → waiting
 
-    @Column(name = "job_role_id", nullable = false)
-    private String jobRoleId;
+    // many-to-one → JobRole
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_role_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    private JobRole jobRole;
 
     @Column(name = "session_id")
     private Integer sessionId;
@@ -50,4 +57,8 @@ public class Applicant {
 
     @Column(name = "next_checkpoint")
     private String nextCheckpoint;
+
+
+
 }
+
