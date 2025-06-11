@@ -68,8 +68,10 @@ public class ApplicantDto {
     public static class EvaluationResponse {
         private String id;
         private String name;  // 서버에서 ID로 조회하여 반환
+        private String jobRoleName;
         private List<KeywordEvaluation> evaluations;
         private String summaryUrl;
+
     }
 
     @Data

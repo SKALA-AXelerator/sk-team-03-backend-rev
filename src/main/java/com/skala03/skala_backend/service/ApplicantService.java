@@ -51,10 +51,12 @@ public class ApplicantService {
         return new ApplicantDto.QuestionsResponse(questionList);
     }
 
-    // 지원자 평가 (AI 분석) - DB 데이터 사용 버전
+    // 지원자 평가 (AI 분석) - DB 데이터 사용 버전 (직무 정보 포함)
     public List<ApplicantDto.EvaluationResponse> evaluateApplicants(ApplicantDto.EvaluationRequest request) {
         List<String> applicantIds = request.getApplicantIds();
-        List<Applicant> applicants = applicantRepository.findByApplicantIdIn(applicantIds);
+
+        // JobRole을 함께 fetch하여 N+1 문제 방지
+        List<Applicant> applicants = applicantRepository.findByApplicantIdInWithJobRole(applicantIds);
 
         return applicants.stream()
                 .map(applicant -> {
@@ -72,6 +74,9 @@ public class ApplicantService {
                     // TODO: S3 presigned URL 생성 로직 구현 필요
                     String summaryUrl = "https://example-s3-bucket.com/summaries/" + applicant.getApplicantId() + ".txt";
 
+                    // 직무명 가져오기
+                    String jobRoleName = applicant.getJobRole() != null ? applicant.getJobRole().getJobRoleName() : null;
+
                     // 평가 점수 업데이트 (실제 점수 평균으로)
                     if (!evaluations.isEmpty()) {
                         Float totalScore = (float) evaluations.stream()
@@ -81,15 +86,27 @@ public class ApplicantService {
                         applicant.setTotalScore(totalScore);
                     }
 
+                    // 직무 정보를 evaluations 리스트 맨 앞에 추가
+                    if (applicant.getJobRole() != null) {
+                        ApplicantDto.KeywordEvaluation jobRoleInfo = new ApplicantDto.KeywordEvaluation(
+                                "직무정보: " + applicant.getJobRole().getJobRoleName(),
+                                0,  // 점수는 0으로 설정 (직무정보이므로)
+                                "지원자의 직무 정보"
+                        );
+                        evaluations.add(0, jobRoleInfo);  // 맨 앞에 추가
+                    }
+
                     return new ApplicantDto.EvaluationResponse(
                             applicant.getApplicantId(),
                             applicant.getApplicantName(),
+                            jobRoleName,  // 직무명 추가
                             evaluations,
                             summaryUrl
                     );
                 })
                 .collect(Collectors.toList());
     }
+
 
     // 면접 종료 후 모든 면접자 완료 상태로 변경
     public void updateToInterviewComplete(ApplicantDto.StatusUpdateRequest request) {
