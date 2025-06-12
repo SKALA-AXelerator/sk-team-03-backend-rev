@@ -1,8 +1,10 @@
 package com.skala03.skala_backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 
 public class AdminDto {
@@ -44,6 +46,8 @@ public class AdminDto {
     public static class AiGenerateRequest {
         private String keywordName;   // 사용자가 입력한 키워드 이름
         private String keywordDetail; // 사용자가 입력한 키워드 상세 설명
+
+        private String jobRoleId;     // AI_Data, 반도체, 제조, 금융 (추가)
     }
 
     // 4. 키워드 수정 요청 (/api/admin/change-keywords/{keyword_id})
@@ -55,12 +59,12 @@ public class AdminDto {
         private List<KeywordCriteriaInfo> keywordCriteria;
     }
 
-    // 5. AI 생성 응답 (임시 mock 데이터용)
+    // 5. AI 생성 응답 - 수정됨
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AiGenerateResponse {
-        private List<KeywordCriteriaInfo> generatedCriteria;
+        private List<KeywordCriteriaInfo> keywordCriteria; // generatedCriteria → keywordCriteria로 변경
         private String message;
     }
 

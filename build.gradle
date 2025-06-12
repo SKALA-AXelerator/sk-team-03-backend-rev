@@ -52,9 +52,6 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-	// MariaDB (중복 제거)
-	// runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
@@ -71,4 +68,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Docker 이미지 빌드를 위한 bootJar 태스크 설정
+bootJar {
+	archiveFileName = 'app.jar'
 }
