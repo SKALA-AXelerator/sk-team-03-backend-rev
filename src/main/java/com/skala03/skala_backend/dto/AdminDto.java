@@ -44,10 +44,8 @@ public class AdminDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AiGenerateRequest {
-        private String keywordName;   // 사용자가 입력한 키워드 이름
-        private String keywordDetail; // 사용자가 입력한 키워드 상세 설명
-
-        private String jobRoleId;     // AI_Data, 반도체, 제조, 금융 (추가)
+        private String keywordName;
+        private String keywordDetail;
     }
 
     // 4. 키워드 수정 요청 (/api/admin/change-keywords/{keyword_id})
@@ -122,5 +120,14 @@ public class AdminDto {
         private String jobRoleId;
         private String message;
         private List<KeywordSelectionInfo> updatedKeywords;
+    }
+
+    // 새로운 키워드에 대한 평가 기준 생성 요청을 위한 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class NewKeywordAiGenerateRequest {
+        private String keywordName;   // 신규 키워드 이름
+        private String keywordDetail; // 신규 키워드 상세 설명 (선택)
     }
 }

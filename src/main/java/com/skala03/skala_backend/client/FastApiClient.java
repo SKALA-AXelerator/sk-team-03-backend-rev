@@ -44,8 +44,8 @@ public class FastApiClient {
 
     public FastApiResponse generateKeywordCriteria(FastApiRequest request) {
         try {
-            // 수정: getJobRoleName() -> getJobRoleId()
-            log.info("FastAPI 호출 시작: keywordName={}, jobRoleId={}", request.getKeywordName(), request.getJobRoleId());
+            // job_role_id 제거 후 로그 수정
+            log.info("FastAPI 호출 시작: keywordName={}", request.getKeywordName());
 
             FastApiResponse response = webClient.post()
                     .uri("/api/ai/generate-keyword-criteria")
@@ -112,17 +112,11 @@ public class FastApiClient {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FastApiRequest {
-        @JsonProperty("keyword_id")
-        private Integer keywordId;
-
         @JsonProperty("keyword_name")
         private String keywordName;
 
         @JsonProperty("keyword_detail")
         private String keywordDetail;
-
-        @JsonProperty("job_role_id")
-        private String jobRoleId;
     }
 
     // FastAPI 응답 DTO
