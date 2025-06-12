@@ -1,5 +1,6 @@
 package com.skala03.skala_backend.service;
 
+import com.skala03.skala_backend.client.FastApiClient;
 import com.skala03.skala_backend.dto.AdminDto;
 import com.skala03.skala_backend.entity.Keyword;
 import com.skala03.skala_backend.entity.KeywordCriteria;
@@ -9,16 +10,21 @@ import com.skala03.skala_backend.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
 public class AdminService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private FastApiClient fastApiClient;
 
     // 1. 키워드 목록 조회
     @Transactional(readOnly = true)
@@ -70,23 +76,88 @@ public class AdminService {
 
     // 3. AI 기반 평가기준 생성 (임시 mock 데이터)
     public AdminDto.AiGenerateResponse generateAiCriteria(Integer keywordId, AdminDto.AiGenerateRequest request) {
+        log.info("AI 키워드 생성 요청: keywordId={}, jobRoleId={}", keywordId, request.getJobRoleId());
+
         // 키워드 존재 여부 확인
         Keyword keyword = adminRepository.findById(keywordId)
                 .orElseThrow(() -> new RuntimeException("Keyword not found: " + keywordId));
 
-        // TODO: 실제로는 FastAPI 서버 호출
-        // 임시 mock 데이터 생성
-        List<AdminDto.KeywordCriteriaInfo> mockCriteria = generateMockCriteria(request.getKeywordName(), request.getKeywordDetail());
+        try {
+            // FastAPI 헬스체크 먼저 수행
+            if (!fastApiClient.isHealthy()) {
+                log.warn("FastAPI 서버 헬스체크 실패, mock 데이터로 대체");
+                return generateMockResponse(keywordId, keyword, "FastAPI 서버에 연결할 수 없어 기본 평가기준을 생성했습니다.");
+            }
 
-        // 기존 평가기준 삭제 후 새로 추가
+            // FastAPI 요청 구성 - DB에서 조회한 키워드 정보 사용
+            FastApiClient.FastApiRequest fastApiRequest = FastApiClient.FastApiRequest.builder()
+                    .keywordId(keywordId)
+                    .keywordName(keyword.getKeywordName()) // DB에서 조회
+                    .keywordDetail(keyword.getKeywordDetail() != null ? keyword.getKeywordDetail() : "")
+                    .jobRoleId(request.getJobRoleId() != null ? request.getJobRoleId() : "AI_Data") // 수정: jobRoleName -> jobRoleId
+                    .build();
+
+            log.debug("FastAPI 요청 데이터: keywordName={}, jobRoleId={}",
+                    fastApiRequest.getKeywordName(), fastApiRequest.getJobRoleId()); // 수정: getJobRoleName -> getJobRoleId
+
+            // FastAPI 호출
+            FastApiClient.FastApiResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
+
+            if (fastApiResponse == null) {
+                log.error("FastAPI 응답이 null: keywordId={}", keywordId);
+                return generateMockResponse(keywordId, keyword, "AI 서비스 응답이 없어 기본 평가기준을 생성했습니다.");
+            }
+
+            if (!fastApiResponse.isSuccess()) {
+                String errorMsg = fastApiResponse.getErrorDetail() != null ? fastApiResponse.getErrorDetail() : "알 수 없는 오류";
+                log.error("AI 키워드 생성 실패: keywordId={}, error={}", keywordId, errorMsg);
+                return generateMockResponse(keywordId, keyword, "AI 분석 실패: " + errorMsg);
+            }
+
+            if (fastApiResponse.getCriteria() == null || fastApiResponse.getCriteria().isEmpty()) {
+                log.error("FastAPI 응답에 평가기준이 없음: keywordId={}", keywordId);
+                return generateMockResponse(keywordId, keyword, "AI가 평가기준을 생성하지 못해 기본 평가기준을 생성했습니다.");
+            }
+
+            // FastAPI 응답을 AdminDto로 변환
+            List<AdminDto.KeywordCriteriaInfo> aiCriteria = fastApiResponse.getCriteria().entrySet().stream()
+                    .map(entry -> new AdminDto.KeywordCriteriaInfo(entry.getKey(), entry.getValue()))
+                    .sorted((a, b) -> b.getKeywordScore() - a.getKeywordScore()) // 5점부터 1점까지 정렬
+                    .collect(Collectors.toList());
+
+            log.info("AI 생성된 기준 수: {}", aiCriteria.size());
+
+            // 기존 평가기준 삭제 후 새로 추가
+            adminRepository.deleteCriteriaByKeywordId(keywordId);
+
+            for (AdminDto.KeywordCriteriaInfo criteria : aiCriteria) {
+                adminRepository.insertCriteria(keywordId, criteria.getKeywordScore(), criteria.getKeywordGuideline());
+            }
+
+            log.info("AI 키워드 평가 기준 생성 완료: keywordId={}", keywordId);
+            return new AdminDto.AiGenerateResponse(aiCriteria, "AI 기반 평가기준이 성공적으로 생성되었습니다.");
+
+        } catch (Exception e) {
+            log.error("AI 키워드 생성 중 예외 발생: keywordId={}", keywordId, e);
+            return generateMockResponse(keywordId, keyword, "AI 서비스 일시적 오류로 기본 평가기준을 생성했습니다: " + e.getMessage());
+        }
+    }
+
+    // Mock 응답 생성 메서드 (fallback용)
+    private AdminDto.AiGenerateResponse generateMockResponse(Integer keywordId, Keyword keyword, String message) {
+        log.warn("Mock 데이터 생성: keywordId={}, message={}", keywordId, message);
+
+        List<AdminDto.KeywordCriteriaInfo> mockCriteria = generateMockCriteria(keyword.getKeywordName(), keyword.getKeywordDetail());
+
+        // 기존 평가기준 삭제 후 mock 데이터 추가
         adminRepository.deleteCriteriaByKeywordId(keywordId);
-
         for (AdminDto.KeywordCriteriaInfo criteria : mockCriteria) {
             adminRepository.insertCriteria(keywordId, criteria.getKeywordScore(), criteria.getKeywordGuideline());
         }
 
-        return new AdminDto.AiGenerateResponse(mockCriteria, "AI 기반 평가기준 생성 완료");
+        return new AdminDto.AiGenerateResponse(mockCriteria, message);
     }
+
 
     // 4. 키워드 수정
     public String updateKeyword(Integer keywordId, AdminDto.UpdateKeywordRequest request) {
