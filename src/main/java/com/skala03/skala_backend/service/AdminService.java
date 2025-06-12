@@ -74,9 +74,8 @@ public class AdminService {
         return "Keyword created successfully";
     }
 
-    // 3. AI 기반 평가기준 생성 (임시 mock 데이터)
+    // 3. AI 기반 평가기준 생성 (기존 키워드에 대한 평가기준 생성)
     public AdminDto.AiGenerateResponse generateAiCriteria(Integer keywordId, AdminDto.AiGenerateRequest request) {
-        log.info("AI 키워드 생성 요청: keywordId={}, jobRoleId={}", keywordId, request.getJobRoleId());
 
         // 키워드 존재 여부 확인
         Keyword keyword = adminRepository.findById(keywordId)
@@ -91,14 +90,11 @@ public class AdminService {
 
             // FastAPI 요청 구성 - DB에서 조회한 키워드 정보 사용
             FastApiClient.FastApiRequest fastApiRequest = FastApiClient.FastApiRequest.builder()
-                    .keywordId(keywordId)
                     .keywordName(keyword.getKeywordName()) // DB에서 조회
                     .keywordDetail(keyword.getKeywordDetail() != null ? keyword.getKeywordDetail() : "")
-                    .jobRoleId(request.getJobRoleId() != null ? request.getJobRoleId() : "AI_Data") // 수정: jobRoleName -> jobRoleId
-                    .build();
+                    .build(); // keyword_id 제거
 
-            log.debug("FastAPI 요청 데이터: keywordName={}, jobRoleId={}",
-                    fastApiRequest.getKeywordName(), fastApiRequest.getJobRoleId()); // 수정: getJobRoleName -> getJobRoleId
+            log.debug("FastAPI 요청 데이터: keywordName={}", fastApiRequest.getKeywordName());
 
             // FastAPI 호출
             FastApiClient.FastApiResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
@@ -143,7 +139,46 @@ public class AdminService {
         }
     }
 
-    // Mock 응답 생성 메서드 (fallback용)
+    // 새로운 키워드용 (아직 DB에 없는 키워드) - 새로 추가
+    public AdminDto.AiGenerateResponse generateAiCriteriaForNewKeyword(String keywordName, String keywordDetail) {
+
+        try {
+            // FastAPI 헬스체크
+            if (!fastApiClient.isHealthy()) {
+                log.warn("FastAPI 서버 헬스체크 실패");
+                return generateMockResponseForNewKeyword(keywordName, keywordDetail, "FastAPI 서버 연결 실패");
+            }
+
+            // FastAPI 요청 구성 - ID 없이 이름과 설명만
+            FastApiClient.FastApiRequest fastApiRequest = FastApiClient.FastApiRequest.builder()
+                    .keywordName(keywordName)
+                    .keywordDetail(keywordDetail != null ? keywordDetail : "")
+                    .build();
+
+            log.debug("FastAPI 요청 데이터: keywordName={}", fastApiRequest.getKeywordName());
+
+            // FastAPI 호출
+            FastApiClient.FastApiResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
+
+            // 응답 처리 로직은 기존과 동일...
+            if (fastApiResponse != null && fastApiResponse.isSuccess() && fastApiResponse.getCriteria() != null) {
+                List<AdminDto.KeywordCriteriaInfo> aiCriteria = fastApiResponse.getCriteria().entrySet().stream()
+                        .map(entry -> new AdminDto.KeywordCriteriaInfo(entry.getKey(), entry.getValue()))
+                        .sorted((a, b) -> b.getKeywordScore() - a.getKeywordScore())
+                        .collect(Collectors.toList());
+
+                return new AdminDto.AiGenerateResponse(aiCriteria, "AI 기반 평가기준이 성공적으로 생성되었습니다.");
+            } else {
+                return generateMockResponseForNewKeyword(keywordName, keywordDetail, "AI 응답 처리 실패");
+            }
+
+        } catch (Exception e) {
+            log.error("신규 키워드 AI 생성 중 예외: keywordName={}", keywordName, e);
+            return generateMockResponseForNewKeyword(keywordName, keywordDetail, "AI 서비스 오류: " + e.getMessage());
+        }
+    }
+
+    // Mock 응답 생성 메서드 (fallback용) - 기존
     private AdminDto.AiGenerateResponse generateMockResponse(Integer keywordId, Keyword keyword, String message) {
         log.warn("Mock 데이터 생성: keywordId={}, message={}", keywordId, message);
 
@@ -155,6 +190,16 @@ public class AdminService {
             adminRepository.insertCriteria(keywordId, criteria.getKeywordScore(), criteria.getKeywordGuideline());
         }
 
+        return new AdminDto.AiGenerateResponse(mockCriteria, message);
+    }
+
+    // Mock 응답 생성 메서드 (신규 키워드용) - 새로 추가
+    private AdminDto.AiGenerateResponse generateMockResponseForNewKeyword(String keywordName, String keywordDetail, String message) {
+        log.warn("신규 키워드 Mock 데이터 생성: keywordName={}, message={}", keywordName, message);
+
+        List<AdminDto.KeywordCriteriaInfo> mockCriteria = generateMockCriteria(keywordName, keywordDetail);
+
+        // 신규 키워드는 DB에 저장하지 않고 응답만 반환
         return new AdminDto.AiGenerateResponse(mockCriteria, message);
     }
 

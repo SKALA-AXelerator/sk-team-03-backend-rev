@@ -45,13 +45,31 @@ public class AdminController {
     }
 
     // 3. AI 기반 평가기준 생성
+    // 기존 키워드용 (DB에 있는 키워드)
     @PostMapping("/ai-generate-keywords/{keywordId}")
-    @Operation(summary = "특정 키워드에 대한 평가기준을 AI로 생성")
+    @Operation(summary = "기존 키워드에 대한 평가기준을 AI로 생성")
     public ResponseEntity<?> aiGenerateKeywords(
             @PathVariable Integer keywordId,
             @RequestBody AdminDto.AiGenerateRequest request) {
         try {
             AdminDto.AiGenerateResponse response = adminService.generateAiCriteria(keywordId, request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Internal server error");
+        }
+    }
+
+    // 신규 키워드용 (DB에 없는 키워드) - 새로 추가
+    @PostMapping("/ai-generate-keywords/new")
+    @Operation(summary = "새로운 키워드에 대한 평가기준을 AI로 생성")
+    public ResponseEntity<?> aiGenerateKeywordsForNew(
+            @RequestBody AdminDto.NewKeywordAiGenerateRequest request) {
+        try {
+            AdminDto.AiGenerateResponse response = adminService.generateAiCriteriaForNewKeyword(
+                    request.getKeywordName(),
+                    request.getKeywordDetail());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
