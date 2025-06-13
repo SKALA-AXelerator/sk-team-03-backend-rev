@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco' // 테스트 커버리지를 위한 JaCoCo 플러그인 추가
 }
 
 group = 'com.skala03'
@@ -35,6 +36,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator' // 헬스체크를 위해 추가
 
 	// Spring AI 관련 의존성 주석 처리 (이미 주석 처리되어 있음)
 	// implementation 'org.springframework.ai:spring-ai-starter-model-openai'
@@ -59,18 +61,63 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
-// Spring AI BOM 설정 주석 처리
-// dependencyManagement {
-//     imports {
-//        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-//     }
-// }
+// JaCoCo 설정
+jacoco {
+	toolVersion = "0.8.8"
+}
+
+// JaCoCo 설정
+jacoco {
+	toolVersion = "0.8.8"
+}
+
+jacocoTestReport {
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
+	finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.30 // 30% 커버리지 요구 (초기에는 낮게 설정)
+			}
+		}
+		rule {
+			enabled = false
+			element = 'CLASS'
+			includes = ['com.skala03.skala_backend.*']
+			limit {
+				counter = 'LINE'
+				value = 'TOTALCOUNT'
+				maximum = 200
+			}
+		}
+	}
+}
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
 
 // Docker 이미지 빌드를 위한 bootJar 태스크 설정
 bootJar {
 	archiveFileName = 'app.jar'
+	enabled = true
+}
+
+jar {
+	enabled = false
+}
+
+// 애플리케이션 실행 시 프로파일 설정
+bootRun {
+	if (project.hasProperty('args')) {
+		args project.args.split(',')
+	}
 }
