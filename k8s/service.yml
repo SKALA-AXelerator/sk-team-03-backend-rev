@@ -1,13 +1,18 @@
+# service.yml
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: sk-team-03-spring-backend-service  # ArgoCD 및 다른 서비스와 구분을 위해 변경
   namespace: sk-team-03
+  labels:
+    app: sk-team-03-spring-backend
+    service: spring-backend
 spec:
   selector:
     app: backend
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080
   type: ClusterIP

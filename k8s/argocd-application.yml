@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-username/sk-team-03-backend-rev.git
+    repoURL: https://github.com/SKALA-AXelerator/sk-team-03-backend-rev.git  # ✅ 정확함
     targetRevision: HEAD
-    path: k8s  # 같은 저장소의 k8s 폴더를 참조
+    path: k8s
   destination:
     server: https://kubernetes.default.svc
     namespace: sk-team-03

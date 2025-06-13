@@ -1,21 +1,68 @@
+# ingress.yml - 기존 파일을 이것으로 교체
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: backend-ingress
+  name: sk-team-03-ingress
   namespace: sk-team-03
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # API 경로 rewrite 설정
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      location /api/spring {
+        rewrite ^/api/spring/?(.*)$ /$1 break;
+      }
 spec:
+  ingressClassName: nginx
   rules:
-    - host: backend-team03.your-domain.com  # 실제 도메인으로 변경
+    - host: sk-team-03.intervia.com  # 실제 도메인으로 변경
       http:
         paths:
-          - path: /
+          # Spring Boot API - 기존 백엔드
+          - path: /api/spring
             pathType: Prefix
             backend:
               service:
-                name: backend-service
+                name: sk-team-03-spring-backend-service
                 port:
                   number: 80
+
+          # Swagger UI
+          - path: /swagger-ui
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-backend-service
+                port:
+                  number: 80
+
+          # API Docs
+          - path: /api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-backend-service
+                port:
+                  number: 80
+
+          # 향후 추가할 서비스들을 위한 주석 처리된 설정
+          # # FastAPI 백엔드 (필요시 주석 해제)
+          # - path: /api/fastapi
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: fastapi-backend-service
+          #       port:
+          #         number: 80
+
+          # # React 프론트엔드 (필요시 주석 해제)
+          # - path: /
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: frontend-service
+          #       port:
+          #         number: 80

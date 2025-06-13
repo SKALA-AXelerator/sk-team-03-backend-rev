@@ -1,12 +1,19 @@
+# deployment.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: sk-team-03-backend-deployment
   namespace: sk-team-03
   labels:
-    app: backend
+    app: sk-team-03-backend
+    version: v1
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: backend
@@ -14,13 +21,22 @@ spec:
     metadata:
       labels:
         app: backend
+        version: v1
     spec:
       serviceAccountName: sk-team-03-sa
+      imagePullSecrets:
+        - name: registry-secret
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
       containers:
         - name: backend
-          image: your-docker-registry.com/sk-team-03-backend:latest
+          image: amdp-registry.skala-ai.com/skala25a/sk-team-03-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
+              protocol: TCP
           env:
             - name: DB_URL
               valueFrom:
@@ -32,32 +48,57 @@ spec:
                 configMapKeyRef:
                   name: backend-config
                   key: SPRING_PROFILES_ACTIVE
-            - name: DB_USERNAME
+            - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: backend-secret
                   key: DB_USERNAME
-            - name: DB_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: backend-secret
                   key: DB_PASSWORD
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
           resources:
             requests:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "250m"
             limits:
-              memory: "1Gi"
+              memory: "512Mi"
               cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 60
-            periodSeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 30
-            periodSeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/cache
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
