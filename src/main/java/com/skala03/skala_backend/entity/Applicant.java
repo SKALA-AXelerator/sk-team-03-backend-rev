@@ -28,7 +28,7 @@ public class Applicant {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "interview_status", nullable = false)
-    private InterviewStatus interviewStatus = InterviewStatus.waiting;  // pending → waiting
+    private InterviewStatus interviewStatus = InterviewStatus.WAITING;  // pending → waiting
 
     // many-to-one → JobRole
     @ManyToOne(fetch = FetchType.LAZY)
