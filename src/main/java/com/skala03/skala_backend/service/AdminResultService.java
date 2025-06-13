@@ -45,6 +45,7 @@ public class AdminResultService {
         // 기본 지원자 정보
         dto.setApplicantId(applicant.getApplicantId());
         dto.setApplicantName(applicant.getApplicantName());
+        dto.setIndividualPdfPath(applicant.getIndividualPdfPath());
         dto.setJobRoleName(applicant.getJobRole().getJobRoleName());
         dto.setInterviewStatus(applicant.getInterviewStatus().toString());
         dto.setTotalScore(applicant.getTotalScore());
@@ -89,7 +90,8 @@ public class AdminResultService {
                 .map(score -> new KeywordScoreDto(
                         score.getKeywordId().toString(),
                         keywordMap.getOrDefault(score.getKeywordId(), "Unknown"),
-                        score.getApplicantScore()
+                        score.getApplicantScore(),
+                        score.getScoreComment()
                 ))
                 .collect(Collectors.toList());
 

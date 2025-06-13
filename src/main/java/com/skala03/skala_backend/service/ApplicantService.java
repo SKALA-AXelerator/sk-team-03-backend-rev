@@ -113,7 +113,7 @@ public class ApplicantService {
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(request.getApplicationIds());
 
         applicants.forEach(applicant -> {
-            applicant.setInterviewStatus(InterviewStatus.completed);
+            applicant.setInterviewStatus(InterviewStatus.COMPLETED);
             applicant.setCompletedAt(LocalDateTime.now());
         });
 
@@ -147,26 +147,26 @@ public class ApplicantService {
 
                 // 상태별 시간 기록
                 switch (finalNewStatus) {
-                    case waiting:
+                    case WAITING:
                         // 대기 상태로 변경 시 시작/완료 시간 초기화 (필요시)
                         // applicant.setStartedAt(null);
                         // applicant.setCompletedAt(null);
                         break;
-                    case completed:
+                    case COMPLETED:
                         // 완료 상태로 변경 시 완료 시간 기록
                         applicant.setCompletedAt(LocalDateTime.now());
                         if (applicant.getStartedAt() == null) {
                             applicant.setStartedAt(LocalDateTime.now());
                         }
                         break;
-                    case absent:
+                    case ABSENT:
                         // 불참 처리 - 특별한 시간 기록 없음
                         break;
                 }
             }
 
             // 면접 시작 시간 기록 (상태 변경과 별개로)
-            if (applicant.getStartedAt() == null && finalNewStatus != InterviewStatus.waiting) {
+            if (applicant.getStartedAt() == null && finalNewStatus != InterviewStatus.WAITING) {
                 applicant.setStartedAt(LocalDateTime.now());
             }
         });
@@ -216,17 +216,17 @@ public class ApplicantService {
         // 상태별 시간 기록
         LocalDateTime now = LocalDateTime.now();
         switch (newStatus) {
-            case waiting:
+            case WAITING:
                 // 대기 상태로 변경 시 시작/완료 시간 초기화 (선택사항)
                 break;
-            case completed:
+            case COMPLETED:
                 // 완료 상태로 변경 시 완료 시간 기록
                 applicant.setCompletedAt(now);
                 if (applicant.getStartedAt() == null) {
                     applicant.setStartedAt(now);
                 }
                 break;
-            case absent:
+            case ABSENT:
                 // 불참 처리
                 break;
         }
@@ -281,7 +281,7 @@ public class ApplicantService {
         // 4. 선택된 지원자들을 새 세션으로 이동
         selectedApplicants.forEach(applicant -> {
             applicant.setSessionId(newSessionId);
-            applicant.setInterviewStatus(InterviewStatus.waiting); // 상태 초기화
+            applicant.setInterviewStatus(InterviewStatus.WAITING); // 상태 초기화
             applicant.setStartedAt(null);
             applicant.setCompletedAt(null);
         });
