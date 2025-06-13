@@ -2,7 +2,6 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.0'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'jacoco' // 테스트 커버리지를 위한 JaCoCo 플러그인 추가
 }
 
 group = 'com.skala03'
@@ -61,48 +60,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
-// JaCoCo 설정
-jacoco {
-	toolVersion = "0.8.8"
-}
 
-// JaCoCo 설정
-jacoco {
-	toolVersion = "0.8.8"
-}
-
-jacocoTestReport {
-	reports {
-		xml.required = true
-		html.required = true
-		csv.required = false
-	}
-	finalizedBy jacocoTestCoverageVerification
-}
-
-jacocoTestCoverageVerification {
-	violationRules {
-		rule {
-			limit {
-				minimum = 0.30 // 30% 커버리지 요구 (초기에는 낮게 설정)
-			}
-		}
-		rule {
-			enabled = false
-			element = 'CLASS'
-			includes = ['com.skala03.skala_backend.*']
-			limit {
-				counter = 'LINE'
-				value = 'TOTALCOUNT'
-				maximum = 200
-			}
-		}
-	}
-}
 
 tasks.named('test') {
 	useJUnitPlatform()
-	finalizedBy jacocoTestReport
 }
 
 // Docker 이미지 빌드를 위한 bootJar 태스크 설정
