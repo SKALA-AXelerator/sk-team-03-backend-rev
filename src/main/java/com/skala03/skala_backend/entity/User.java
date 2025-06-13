@@ -42,6 +42,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RoomParticipant> roomParticipants = new HashSet<>();
     public enum Role {
-        admin, interviewer
+        ADMIN,
+        INTERVIEWER
     }
 }

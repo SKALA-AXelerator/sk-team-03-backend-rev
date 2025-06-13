@@ -36,7 +36,7 @@ public class Session {
     // ✅ 추가: 세션 상태
     @Enumerated(EnumType.STRING)
     @Column(name = "session_status")
-    private SessionStatus sessionStatus = SessionStatus.scheduled;
+    private SessionStatus sessionStatus = SessionStatus.SCHEDULED;
 
     @Column(name = "interviewers_user_id", length = 100)
     private String interviewersUserId;
@@ -54,6 +54,10 @@ public class Session {
 
     // ✅ 추가: SessionStatus enum
     public enum SessionStatus {
-        scheduled, waiting, in_progress, completed, cancelled
+        SCHEDULED,
+        WAITING,
+        IN_PROGRESS,
+        COMPLETED,
+        CANCELLED
     }
 }
