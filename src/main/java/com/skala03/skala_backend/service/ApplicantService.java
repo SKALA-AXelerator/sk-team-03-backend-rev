@@ -192,8 +192,13 @@ public class ApplicantService {
                 .collect(Collectors.toList());
     }
 
-    // 개별 지원자 상태 변경
+    @Transactional
     public ApplicantDto.StatusChangeResponse updateApplicantStatus(String applicantId, ApplicantDto.StatusChangeRequest request) {
+        // 입력값 검증
+        if (request.getInterviewStatus() == null || request.getInterviewStatus().trim().isEmpty()) {
+            throw new RuntimeException("Interview status cannot be null or empty");
+        }
+
         // 지원자 존재 여부 확인
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new RuntimeException("Applicant not found: " + applicantId));
@@ -204,10 +209,11 @@ public class ApplicantService {
         // 요청으로 받은 상태 문자열을 InterviewStatus enum으로 변환
         InterviewStatus newStatus;
         try {
-            newStatus = InterviewStatus.valueOf(request.getInterviewStatus().toLowerCase());
+            // toLowerCase() → toUpperCase()로 변경
+            newStatus = InterviewStatus.valueOf(request.getInterviewStatus().toUpperCase().trim());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Invalid interview status: " + request.getInterviewStatus() +
-                    ". Valid values are: waiting, completed, absent");
+                    ". Valid values are: WAITING, COMPLETED, ABSENT");
         }
 
         // 상태 업데이트
@@ -218,6 +224,8 @@ public class ApplicantService {
         switch (newStatus) {
             case WAITING:
                 // 대기 상태로 변경 시 시작/완료 시간 초기화 (선택사항)
+                applicant.setStartedAt(null);
+                applicant.setCompletedAt(null);
                 break;
             case COMPLETED:
                 // 완료 상태로 변경 시 완료 시간 기록
@@ -227,7 +235,7 @@ public class ApplicantService {
                 }
                 break;
             case ABSENT:
-                // 불참 처리
+                // 불참 처리 - 필요시 특별한 로직 추가
                 break;
         }
 
@@ -235,7 +243,7 @@ public class ApplicantService {
         applicantRepository.save(applicant);
 
         // 응답 생성
-        String message = "Interview status updated successfully";
+        String message = "Interview status updated successfully from " + previousStatus + " to " + newStatus.name();
 
         return new ApplicantDto.StatusChangeResponse(
                 applicantId,
@@ -243,7 +251,6 @@ public class ApplicantService {
                 message
         );
     }
-
     // 세션 재편성
     @Transactional
     public ApplicantDto.SessionReorganizeResponse reorganizeSessions(
