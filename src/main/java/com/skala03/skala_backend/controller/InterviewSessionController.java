@@ -1,15 +1,12 @@
 package com.skala03.skala_backend.controller;
 
-
-
 import com.skala03.skala_backend.dto.InterviewSessionDto;
 import com.skala03.skala_backend.service.InterviewSessionService;
-import com.skala03.skala_backend.dto.InterviewSessionDto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/interviewers")
@@ -19,94 +16,83 @@ public class InterviewSessionController {
     @Autowired
     private InterviewSessionService interviewSessionService;
 
-    // ✅ PathVariable 방식으로 수정됨
+    /**
+     * 세션 리스트 입장 - 성공 시 200 OK
+     */
     @PostMapping("/enter-session-list/{roomId}/{userId}")
-    public ResponseEntity<InterviewSessionDto.InterviewStatusResponse> enterSessionList(
+    public ResponseEntity<Void> enterSessionList(
             @PathVariable String roomId,
             @PathVariable String userId) {
-        try {
-            interviewSessionService.enterSessionList(roomId, userId);
-            return ResponseEntity.ok(new InterviewSessionDto.InterviewStatusResponse(
-                    true,
-                    "세션 리스트에 성공적으로 입장했습니다.",
-                    null
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new InterviewSessionDto.InterviewStatusResponse(
-                    false,
-                    e.getMessage(),
-                    null
-            ));
-        }
-    }
-    // ✅ PathVariable 방식으로 수정됨
-    @PostMapping("/end-session/{roomId}/{userId}")
-    public ResponseEntity<InterviewSessionDto.InterviewStatusResponse> endSession(
-            @PathVariable String roomId,
-            @PathVariable String userId) {
-        try {
-            interviewSessionService.endSession(roomId, userId);
-            return ResponseEntity.ok(new InterviewSessionDto.InterviewStatusResponse(
-                    true,
-                    "면접이 성공적으로 종료되었습니다.",
-                    null
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new InterviewSessionDto.InterviewStatusResponse(
-                    false,
-                    e.getMessage(),
-                    null
-            ));
-        }
+        interviewSessionService.enterSessionList(roomId, userId);
+        return ResponseEntity.ok().build();
     }
 
     /**
-     * 참가자 상태 폴링 API
+     * 세션 종료 - 성공 시 200 OK
+     */
+    @PostMapping("/end-session/{roomId}/{userId}")
+    public ResponseEntity<Void> endSession(
+            @PathVariable String roomId,
+            @PathVariable String userId) {
+        interviewSessionService.endSession(roomId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 참가자 상태 조회 - 상태값과 시간만 직접 반환
      */
     @GetMapping("/status/{roomId}/{userId}")
-    public ResponseEntity<ParticipantStatusResponse> getParticipantStatus(
+    public ResponseEntity<Map<String, Object>> getParticipantStatus(
             @PathVariable String roomId,
             @PathVariable String userId) {
-        try {
-            ParticipantStatusResponse response =
-                    interviewSessionService.getParticipantStatus(roomId, userId);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ParticipantStatusResponse(
-                    null, null,  e.getMessage()
-            ));
-        }
+        return ResponseEntity.ok(interviewSessionService.getParticipantStatus(roomId, userId));
     }
 
     /**
-     * 면접 시작 API
+     * 면접 시작 - boolean 값만 반환
      */
     @PostMapping("/start")
-    public ResponseEntity<InterviewStatusResponse> startInterview(
-            @Valid @RequestBody StartInterviewRequest request) {
-        try {
-            boolean success = interviewSessionService.startInterview(
-                    request.getRoomId(),
-                    request.getSessionId(),
-                    request.getLeaderUserId()
-            );
+    public ResponseEntity<Boolean> startInterview(
+            @Valid @RequestBody InterviewSessionDto.StartInterviewRequest request) {
+        boolean success = interviewSessionService.startInterview(
+                request.getRoomId(),
+                request.getSessionId(),
+                request.getLeaderUserId()
+        );
 
-            return ResponseEntity.ok(new InterviewStatusResponse(
-                    success,
-                    success ? "면접이 시작되었습니다." : "모든 면접관이 대기 상태가 아닙니다.",
-                    null
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new InterviewStatusResponse(
-                    false,
-                    e.getMessage(),
-                    null
-            ));
-        }
+        return ResponseEntity.ok(success);
+    }
+    /**
+     * 세션 상태 조회 - sessionStatus만 반환
+     */
+    @GetMapping("/status/{sessionId}")
+    public ResponseEntity<Map<String, Object>> getSessionStatus(
+            @PathVariable Integer sessionId) {
+        return ResponseEntity.ok(interviewSessionService.getSessionStatus(sessionId));
+    }
+    /**
+     * 세션 상태를 IN_PROGRESS로 변경
+     */
+    @PutMapping("/status/{sessionId}/start")
+    public ResponseEntity<Map<String, Object>> startSession(
+            @PathVariable Integer sessionId) {
+        return ResponseEntity.ok(interviewSessionService.updateSessionToInProgress(sessionId));
     }
 
-
-
-
+    /**
+     * 세션 상태를 COMPLETED로 변경
+     */
+    @PutMapping("/status/{sessionId}/complete")
+    public ResponseEntity<Map<String, Object>> completeSession(
+            @PathVariable Integer sessionId) {
+        return ResponseEntity.ok(interviewSessionService.updateSessionToCompleted(sessionId));
+    }
+    /**
+     * middleReviewText 조회 - Map 직접 반환
+     */
+    @GetMapping("/middle-reviews/{sessionId}")
+    public ResponseEntity<Map<String, String>> getMiddleReviewTexts(
+            @PathVariable Integer sessionId) {
+        return ResponseEntity.ok(interviewSessionService.getMiddleReviewTexts(sessionId));
+    }
 }
-

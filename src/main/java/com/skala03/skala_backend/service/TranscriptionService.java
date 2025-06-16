@@ -28,7 +28,7 @@ public class TranscriptionService {
         {   "model_name": "sommers",
             "use_diarization": true,
             "diarization": {
-                "spk_count": 7
+                "spk_count": 6
             },
             "use_itn": false,
             "use_disfluency_filter": false,
