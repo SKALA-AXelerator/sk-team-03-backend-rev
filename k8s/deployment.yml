@@ -24,8 +24,6 @@ spec:
         version: v1
     spec:
       serviceAccountName: sk-team-03-sa
-      imagePullSecrets:
-        - name: registry-secret
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
