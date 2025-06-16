@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: k8s
   datasource:
     url: ${DB_URL:jdbc:mariadb://mariadb-service:3306/sk-team-03}
     username: ${DB_USERNAME:root}
