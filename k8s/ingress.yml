@@ -30,11 +30,11 @@ spec:
               service:
                 name: sk-team-03-backend-service
                 port:
-                  number: 8080
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: sk-team-03-backend-service
                 port:
-                  number: 8080
+                  number: 80
