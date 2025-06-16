@@ -43,7 +43,7 @@ public class DebugController {
                     .userEmail("test@skala.com")
                     .userPassword(passwordEncoder.encode("test123"))
                     .userName("테스트 사용자")
-                    .userRole(User.Role.admin)
+                    .userRole(User.Role.ADMIN)
                     .build();
 
             userRepository.save(testUser);
