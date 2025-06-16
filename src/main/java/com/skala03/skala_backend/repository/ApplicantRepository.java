@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicantRepository extends JpaRepository<Applicant, String> {
@@ -74,4 +75,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     @Query("SELECT a FROM Applicant a JOIN FETCH a.jobRole WHERE a.applicantId IN :applicantIds")
     List<Applicant> findByApplicantIdInWithJobRole(@Param("applicantIds") List<String> applicantIds);
 
+    // JobRole과 함께 조회
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.jobRole WHERE a.applicantId = :applicantId")
+    Optional<Applicant> findByIdWithJobRole(@Param("applicantId") String applicantId);
 }
