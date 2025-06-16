@@ -38,6 +38,6 @@ public class InterviewContent {
     @Column(name = "final_transcript", columnDefinition = "TEXT")
     private String finalTranscript;
 
-    @Column(name = "quick_review_text", columnDefinition = "TEXT")
-    private String quickReviewText;
+    @Column(name = "middle_review_text", columnDefinition = "TEXT")
+    private String middleReviewText;
 }

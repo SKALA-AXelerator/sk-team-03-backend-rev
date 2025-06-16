@@ -1,17 +1,16 @@
 package com.skala03.skala_backend.service;
 
-import com.skala03.skala_backend.dto.InterviewSessionDto;
+import com.skala03.skala_backend.entity.InterviewContent;
 import com.skala03.skala_backend.entity.RoomParticipant;
 import com.skala03.skala_backend.entity.Session;
+import com.skala03.skala_backend.repository.InterviewContentRepository;
 import com.skala03.skala_backend.repository.RoomParticipantRepository;
 import com.skala03.skala_backend.repository.SessionRepository;
-import com.skala03.skala_backend.dto.InterviewSessionDto.ParticipantStatusResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,20 +23,18 @@ public class InterviewSessionService {
     @Autowired
     private SessionRepository sessionRepository;
 
+    @Autowired
+    private InterviewContentRepository interviewContentRepository;
+
     /**
      * 세션 리스트 화면 입장 (offline → waiting)
      */
     public void enterSessionList(String roomId, String userId) {
-        Optional<RoomParticipant> participantOpt =
-                roomParticipantRepository.findByRoomIdAndUserId(roomId, userId);
+        RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다."));
 
-        if (participantOpt.isPresent()) {
-            RoomParticipant participant = participantOpt.get();
-            participant.updateStatus(RoomParticipant.ParticipantStatus.WAITING);
-            roomParticipantRepository.save(participant);
-        } else {
-            throw new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다.");
-        }
+        participant.updateStatus(RoomParticipant.ParticipantStatus.WAITING);
+        roomParticipantRepository.save(participant);
     }
 
     /**
@@ -80,29 +77,46 @@ public class InterviewSessionService {
         roomParticipantRepository.saveAll(sessionInterviewers);
 
         // 6. 세션 상태 변경
-        session.setSessionStatus(Session.SessionStatus.IN_PROGRESS);
+        session.setSessionStatus(Session.SessionStatus.WAITING);
         sessionRepository.save(session);
 
         return true; // 성공
     }
-
     /**
-     * 참가자 상태 조회
+     * 세션 상태 조회 - sessionStatus만 반환
      */
-    public InterviewSessionDto.ParticipantStatusResponse getParticipantStatus(String roomId, String userId) {
-        Optional<RoomParticipant> participant =
-                roomParticipantRepository.findByRoomIdAndUserId(roomId, userId);
+    @Transactional(readOnly = true)
+    public Map<String, Object> getSessionStatus(Integer sessionId) {
 
-        if (participant.isPresent()) {
-            RoomParticipant p = participant.get();
-            return new InterviewSessionDto.ParticipantStatusResponse(
-                    p.getParticipantStatus(),
-                    p.getLastPingAt(),
-                    "상태 조회 성공"
-            );
+
+        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
+
+        if (sessionOpt.isEmpty()) {
+
+            throw new RuntimeException("세션을 찾을 수 없습니다: " + sessionId);
         }
 
-        throw new IllegalArgumentException("참가자를 찾을 수 없습니다.");
+        Session session = sessionOpt.get();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sessionStatus", session.getSessionStatus().name());
+
+
+
+        return result;
+    }
+    /**
+     * 참가자 상태 조회 - Map으로 직접 반환
+     */
+    public Map<String, Object> getParticipantStatus(String roomId, String userId) {
+        RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("참가자를 찾을 수 없습니다."));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", participant.getParticipantStatus());
+        result.put("lastPingAt", participant.getLastPingAt());
+
+        return result;
     }
 
     /**
@@ -124,6 +138,110 @@ public class InterviewSessionService {
                         roomParticipantRepository.save(participant);
                     });
         });
+    }
+
+    /**
+     * 세션 종료
+     */
+    public void endSession(String roomId, String userId) {
+        RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다."));
+
+        participant.updateStatus(RoomParticipant.ParticipantStatus.OFFLINE);
+        roomParticipantRepository.save(participant);
+    }
+    /**
+     * 세션 상태를 IN_PROGRESS로 변경
+     */
+    @Transactional
+    public Map<String, Object> updateSessionToInProgress(Integer sessionId) {
+
+
+        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
+
+        if (sessionOpt.isEmpty()) {
+
+            throw new RuntimeException("세션을 찾을 수 없습니다: " + sessionId);
+        }
+
+        Session session = sessionOpt.get();
+
+        // 상태 검증 (SCHEDULED 또는 WAITING만 IN_PROGRESS로 변경 가능)
+        if (session.getSessionStatus() != Session.SessionStatus.SCHEDULED &&
+                session.getSessionStatus() != Session.SessionStatus.WAITING) {
+
+            throw new IllegalStateException("현재 상태에서는 면접을 시작할 수 없습니다: " + session.getSessionStatus());
+        }
+
+        // 상태 변경
+        session.setSessionStatus(Session.SessionStatus.IN_PROGRESS);
+        sessionRepository.save(session);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sessionStatus", session.getSessionStatus().name());
+        result.put("message", "세션이 성공적으로 시작되었습니다.");
+
+
+
+        return result;
+    }
+
+    /**
+     * 세션 상태를 COMPLETED로 변경
+     */
+    @Transactional
+    public Map<String, Object> updateSessionToCompleted(Integer sessionId) {
+
+
+        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
+
+        if (sessionOpt.isEmpty()) {
+
+            throw new RuntimeException("세션을 찾을 수 없습니다: " + sessionId);
+        }
+
+        Session session = sessionOpt.get();
+
+        // 상태 검증 (IN_PROGRESS만 COMPLETED로 변경 가능)
+        if (session.getSessionStatus() != Session.SessionStatus.IN_PROGRESS) {
+
+            throw new IllegalStateException("진행 중인 세션만 완료할 수 있습니다: " + session.getSessionStatus());
+        }
+
+        // 상태 변경
+        session.setSessionStatus(Session.SessionStatus.COMPLETED);
+        sessionRepository.save(session);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("sessionStatus", session.getSessionStatus().name());
+        result.put("message", "세션이 성공적으로 완료되었습니다.");
+
+
+
+        return result;
+    }
+    /**
+     * 세션의 middleReviewText만 조회 - Map 직접 반환
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> getMiddleReviewTexts(Integer sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+
+        List<String> applicantIds = parseUserIds(session.getApplicantsUserId());
+
+        if (applicantIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<InterviewContent> interviewContents =
+                interviewContentRepository.findByApplicantIds(applicantIds);
+
+        return interviewContents.stream()
+                .collect(Collectors.toMap(
+                        content -> content.getApplicant().getApplicantId(),
+                        content -> content.getMiddleReviewText() != null ? content.getMiddleReviewText() : ""
+                ));
     }
 
     // ================================
@@ -154,18 +272,5 @@ public class InterviewSessionService {
                     return participant.isPresent() &&
                             participant.get().getParticipantStatus() == RoomParticipant.ParticipantStatus.WAITING;
                 });
-    }
-
-    public void endSession(String roomId, String userId) {
-        Optional<RoomParticipant> participantOpt =
-                roomParticipantRepository.findByRoomIdAndUserId(roomId, userId);
-
-        if (participantOpt.isPresent()) {
-            RoomParticipant participant = participantOpt.get();
-            participant.updateStatus(RoomParticipant.ParticipantStatus.OFFLINE);
-            roomParticipantRepository.save(participant);
-        } else {
-            throw new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다.");
-        }
     }
 }
