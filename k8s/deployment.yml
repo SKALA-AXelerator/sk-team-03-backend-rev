@@ -30,7 +30,7 @@ spec:
         fsGroup: 1001
       containers:
         - name: backend
-          image: amdp-registry.skala-ai.com/skala25a/sk-team-03-backend:main-778b987
+          image: amdp-registry.skala-ai.com/skala25a/sk-team-03-backend:main-817a172
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
