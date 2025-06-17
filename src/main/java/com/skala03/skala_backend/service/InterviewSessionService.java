@@ -206,7 +206,7 @@ public class InterviewSessionService {
         Session session = sessionOpt.get();
 
         // 상태 검증 (IN_PROGRESS만 COMPLETED로 변경 가능)
-        if (session.getSessionStatus() != Session.SessionStatus.IN_PROGRESS) {
+        if (session.getSessionStatus() != Session.SessionStatus.WAITING) {
 
             throw new IllegalStateException("진행 중인 세션만 완료할 수 있습니다: " + session.getSessionStatus());
         }
