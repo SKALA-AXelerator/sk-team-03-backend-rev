@@ -22,10 +22,9 @@ public class TranscriptionResult {
 
     @Data
     public static class Utterance {
-        private double startAt;   // start_at
-        private double duration;
+
         private String msg;
         private int spk;
-        private String lang;
+
     }
 }

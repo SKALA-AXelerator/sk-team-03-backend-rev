@@ -65,21 +65,21 @@ public class InterviewSessionController {
             @PathVariable Integer sessionId) {
         return ResponseEntity.ok(interviewSessionService.getSessionStatus(sessionId));
     }
-
+/*
     @Operation(summary = "세션 시작", description = "세션 상태를 IN_PROGRESS로 변경")
     @PutMapping("/status/{sessionId}/start")
     public ResponseEntity<Map<String, Object>> startSession(
             @PathVariable Integer sessionId) {
         return ResponseEntity.ok(interviewSessionService.updateSessionToInProgress(sessionId));
     }
-
-    @Operation(summary = "세션 완료", description = "세션 상태를 COMPLETED로 변경")
+*/
+    @Operation(summary = "녹음 중지 눌렀을 떄 상태 반영", description = "세션 상태를 COMPLETED로 변경")
     @PutMapping("/status/{sessionId}/complete")
     public ResponseEntity<Map<String, Object>> completeSession(
             @PathVariable Integer sessionId) {
         return ResponseEntity.ok(interviewSessionService.updateSessionToCompleted(sessionId));
     }
-
+/*
     @Operation(summary = "중간 리뷰 조회", description = "여러 지원자의 중간 리뷰 텍스트 조회")
     @PostMapping("/middle-reviews")
     public ResponseEntity<Map<String, String>> getMiddleReviewTexts(
@@ -87,7 +87,7 @@ public class InterviewSessionController {
         Map<String, String> middleReviews = interviewSessionService.getMiddleReviewTexts(request.getApplicantIds());
         return ResponseEntity.ok(middleReviews);
     }
-
+*/
     @Operation(summary = "최종 평가 조회", description = "여러 지원자의 최종 평가 정보 조회")
     @PostMapping("/final-reviews")
     public ResponseEntity<List<Map<String, Object>>> getFinalReviews(
