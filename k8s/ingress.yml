@@ -5,12 +5,7 @@ metadata:
   name: sk-team-03-ingress
   namespace: sk-team-03
   annotations:
-    # HTTPS 강제 리디렉션 (TLS 사용 시 권장)
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    
-    # API 경로 rewrite (필수 - /api/spring 경로 때문에)
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     # CORS 설정 (프론트엔드 연동 시 필요)
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
