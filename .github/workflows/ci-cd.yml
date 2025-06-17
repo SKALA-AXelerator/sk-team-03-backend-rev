@@ -120,40 +120,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update Kubernetes manifests (GitOps)
-        if: github.ref == 'refs/heads/main'
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          IMAGE_TAG="main-${SHORT_SHA}"
-          
-          echo "🚀 이미지 태그 업데이트: ${IMAGE_TAG}"
-          
-          # deployment.yml 파일에서 이미지 태그 업데이트
-          sed -i "s|image: ${REGISTRY}/${IMAGE_NAME}:.*|image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}|" k8s/deployment.yml
-          
-          # 변경사항 확인
-          echo "📝 업데이트된 deployment.yml:"
-          grep "image:" k8s/deployment.yml
-          
-          # Git 설정
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          
-          # 변경사항이 있는지 확인
-          if git diff --quiet k8s/deployment.yml; then
-            echo "변경사항 없음"
-            exit 0
-          fi
-          
-          # 변경사항 커밋 및 푸시
-          git add k8s/deployment.yml
-          git commit -m "🚀 Update backend image to ${IMAGE_TAG}"
-          git push
+      # GitOps 업데이트 부분 완전 제거 - ArgoCD가 latest 태그를 자동으로 감지
 
       - name: Build Summary
         if: always()
         run: |
           echo "## 🚀 빌드 및 배포 결과" >> $GITHUB_STEP_SUMMARY
-          echo "- 이미지: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 이미지: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "- Harbor 레지스트리: ✅ 푸시 완료" >> $GITHUB_STEP_SUMMARY
-          echo "- GitOps: ✅ 매니페스트 업데이트 완료" >> $GITHUB_STEP_SUMMARY
+          echo "- ArgoCD: ✅ 자동 동기화 대기 중" >> $GITHUB_STEP_SUMMARY
