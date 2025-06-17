@@ -13,10 +13,10 @@ spec:
   ingressClassName: public-nginx
   tls:
     - hosts:
-        - sk-team-03-intervia.com
+        - sk-team-03.skala25a.project.skala-ai.com
       secretName: sk-team-03-intervia-tls-secret
   rules:
-    - host: sk-team-03-intervia.com
+    - host: sk-team-03.skala25a.project.skala-ai.com
       http:
         paths:
           - backend:
