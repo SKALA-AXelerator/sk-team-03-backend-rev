@@ -2,19 +2,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sk-team-03-ingress
-  namespace: sk-team-03
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     # CORS 설정 (프론트엔드 연동 시 필요)
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+  name: sk-team-03-ingress
+  namespace: sk-team-03
 spec:
   ingressClassName: public-nginx
-  tls:
-    - hosts:
-        - sk-team-03.skala25a.project.skala-ai.com
-      secretName: sk-team-03-intervia-tls-secret
   rules:
     - host: sk-team-03.skala25a.project.skala-ai.com
       http:
@@ -40,3 +36,7 @@ spec:
                   number: 8080
             path: /v3/api-docs
             pathType: Prefix
+  tls:
+    - hosts:
+        - sk-team-03.skala25a.project.skala-ai.com
+      secretName: sk-team-03-tls-secret
