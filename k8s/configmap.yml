@@ -1,11 +1,11 @@
-# configmap.yml - 현재 설정 유지
+# configmap.yml - 로컬 설정 복사
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backend-config
   namespace: sk-team-03
 data:
-  DB_URL: "jdbc:mariadb://mariadb-1.mariadb:3306/sk-team-03"
+  DB_URL: "jdbc:mariadb://a1961fab471c6487aa7b3f049f61cdf7-770154099.ap-northeast-2.elb.amazonaws.com:3306/sk-team-03?autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true"
   SPRING_PROFILES_ACTIVE: "k8s"
   SERVER_PORT: "8080"
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.mariadb.jdbc.Driver"
