@@ -31,7 +31,7 @@ spec:
                 name: sk-team-03-backend-service
                 port:
                   number: 8080
-            path: /v3/api-docs
+            path: /api-docs
             pathType: Prefix
   tls:
     - hosts:
