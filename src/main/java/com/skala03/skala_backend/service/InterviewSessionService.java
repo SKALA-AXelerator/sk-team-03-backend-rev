@@ -1,11 +1,7 @@
 package com.skala03.skala_backend.service;
 
-import com.skala03.skala_backend.entity.InterviewContent;
-import com.skala03.skala_backend.entity.RoomParticipant;
-import com.skala03.skala_backend.entity.Session;
-import com.skala03.skala_backend.repository.InterviewContentRepository;
-import com.skala03.skala_backend.repository.RoomParticipantRepository;
-import com.skala03.skala_backend.repository.SessionRepository;
+import com.skala03.skala_backend.entity.*;
+import com.skala03.skala_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +21,14 @@ public class InterviewSessionService {
 
     @Autowired
     private InterviewContentRepository interviewContentRepository;
+    @Autowired
+    private ApplicantRepository applicantRepository;
 
+    @Autowired
+    private ApplicantKeywordScoreRepository applicantKeywordScoreRepository;
+
+    @Autowired
+    private KeywordRepository keywordRepository;
     /**
      * 세션 리스트 화면 입장 (offline → waiting)
      */
@@ -221,27 +224,37 @@ public class InterviewSessionService {
         return result;
     }
     /**
-     * 세션의 middleReviewText만 조회 - Map 직접 반환
+     * 여러 지원자의 middleReviewText 조회
      */
     @Transactional(readOnly = true)
-    public Map<String, String> getMiddleReviewTexts(Integer sessionId) {
-        Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다: " + sessionId));
+    public Map<String, String> getMiddleReviewTexts(List<String> applicantIds) {
 
-        List<String> applicantIds = parseUserIds(session.getApplicantsUserId());
 
-        if (applicantIds.isEmpty()) {
+        if (applicantIds == null || applicantIds.isEmpty()) {
+
             return Collections.emptyMap();
         }
 
+        // InterviewContent 조회
         List<InterviewContent> interviewContents =
                 interviewContentRepository.findByApplicantIds(applicantIds);
 
-        return interviewContents.stream()
+        // applicantId -> middleReviewText 매핑
+        Map<String, String> result = interviewContents.stream()
                 .collect(Collectors.toMap(
                         content -> content.getApplicant().getApplicantId(),
-                        content -> content.getMiddleReviewText() != null ? content.getMiddleReviewText() : ""
+                        content -> content.getMiddleReviewText() != null ? content.getMiddleReviewText() : "",
+                        (existing, replacement) -> existing // 중복 키 처리
                 ));
+
+        // 요청된 applicantId 중 결과에 없는 것들은 빈 문자열로 추가
+        for (String applicantId : applicantIds) {
+            result.putIfAbsent(applicantId, "");
+        }
+
+
+
+        return result;
     }
 
     // ================================
@@ -261,9 +274,94 @@ public class InterviewSessionService {
                 .collect(Collectors.toList());
     }
 
+
+    // ============================================
+    // 지원자 평가 정보 조회 메서드들
+    // ============================================
+
     /**
-     * 모든 면접관이 WAITING 상태인지 확인
+     * 여러 지원자 최종 평가 정보 조회
      */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getFinalReviews(List<String> applicantIds) {
+
+
+        if (applicantIds == null || applicantIds.isEmpty()) {
+
+            return new ArrayList<>();
+        }
+
+        List<Map<String, Object>> finalReviews = new ArrayList<>();
+
+        for (String applicantId : applicantIds) {
+            try {
+                Map<String, Object> applicantReview = getFinalReview(applicantId);
+                if (applicantReview != null) {
+                    finalReviews.add(applicantReview);
+                }
+            } catch (Exception e) {
+
+                // 한 명의 데이터 조회 실패가 전체를 막지 않도록 continue
+            }
+        }
+
+
+
+        return finalReviews;
+    }
+    /**
+     * 단일 지원자 최종 평가 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getFinalReview(String applicantId) {
+
+
+        // 1. 지원자 기본 정보 조회 (JobRole과 함께)
+        Optional<Applicant> applicantOpt = applicantRepository.findByIdWithJobRole(applicantId);
+        if (applicantOpt.isEmpty()) {
+
+            throw new RuntimeException("지원자를 찾을 수 없습니다: " + applicantId);
+        }
+
+        Applicant applicant = applicantOpt.get();
+
+        // 2. 키워드 점수 조회
+        List<ApplicantKeywordScore> keywordScores =
+                applicantKeywordScoreRepository.findByApplicantId(applicantId);
+
+        // 3. 평가 정보 구성
+        List<Map<String, Object>> evaluations = new ArrayList<>();
+
+        for (ApplicantKeywordScore score : keywordScores) {
+            // 키워드 정보 조회
+            Optional<Keyword> keywordOpt = keywordRepository.findById(score.getKeywordId());
+
+            if (keywordOpt.isPresent()) {
+                Keyword keyword = keywordOpt.get();
+
+                Map<String, Object> evaluation = new HashMap<>();
+                evaluations.add(evaluation);
+                evaluation.put("keyword", keyword.getKeywordName()); // 키워드명
+                evaluation.put("score", score.getApplicantScore());   // 점수
+                evaluation.put("content", score.getScoreComment());   // 코멘트
+
+
+            }
+        }
+
+        // 4. 최종 응답 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", applicant.getApplicantId());
+        result.put("name", applicant.getApplicantName());
+        result.put("jobRoleName", applicant.getJobRole().getJobRoleName());
+        result.put("evaluations", evaluations);
+        result.put("summaryUrl", applicant.getIndividualQnaPath());
+
+
+
+        return result;
+    }
+
     private boolean checkIfAllInterviewersWaiting(String roomId, List<String> interviewerIds) {
         return interviewerIds.stream()
                 .allMatch(userId -> {
