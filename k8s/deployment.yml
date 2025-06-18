@@ -8,7 +8,7 @@ metadata:
     app: sk-team-03-backend
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -24,15 +24,13 @@ spec:
         version: v1
     spec:
       serviceAccountName: sk-team-03-sa
-      imagePullSecrets:
-        - name: registry-secret
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
         fsGroup: 1001
       containers:
         - name: backend
-          image: amdp-registry.skala-ai.com/skala25a/sk-team-03-backend:main-481baa6
+          image: amdp-registry.skala-ai.com/skala25a/sk-team-03-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -48,12 +46,12 @@ spec:
                 configMapKeyRef:
                   name: backend-config
                   key: SPRING_PROFILES_ACTIVE
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: backend-secret
                   key: DB_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: backend-secret
@@ -70,22 +68,6 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
