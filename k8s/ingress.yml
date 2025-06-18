@@ -1,0 +1,63 @@
+# ingress.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sk-team-03-frontend-ingress
+  namespace: sk-team-03
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  labels:
+    app: sk-team-03-frontend
+spec:
+  ingressClassName: public-nginx
+  tls:
+    - hosts:
+        - intervia.skala25a.project.skala-ai.com
+      secretName: sk-team-03-frontend-tls
+  rules:
+    - host: intervia.skala25a.project.skala-ai.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-backend-service
+                port:
+                  number: 8080
+          - path: /swagger-ui
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-backend-service
+                port:
+                  number: 8080
+          - path: /api-docs
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-backend-service
+                port:
+                  number: 8080
+          - path: /ai
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-ai-service
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-ai-service
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sk-team-03-frontend-service
+                port:
+                  number: 80
