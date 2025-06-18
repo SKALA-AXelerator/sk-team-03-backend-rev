@@ -25,10 +25,10 @@ public class TranscriptionService {
         FileSystemResource fileResource = new FileSystemResource(audioFile);
 
         String configJson = """
-        {
+        {   "model_name": "sommers",
             "use_diarization": true,
             "diarization": {
-                "spk_count": 5
+                "spk_count": 6
             },
             "use_itn": false,
             "use_disfluency_filter": false,

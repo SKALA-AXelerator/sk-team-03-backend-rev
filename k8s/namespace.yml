@@ -1,7 +1,0 @@
-# namespace.yml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: sk-team-03
-  labels:
-    name: sk-team-03

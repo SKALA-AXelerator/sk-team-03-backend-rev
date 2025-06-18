@@ -21,7 +21,7 @@ public class AdminResultDto {
     private String interviewStatus;
     private Float totalScore;
     private List<KeywordScoreDto> applicantKeywordScores;
-
+    private String individualPdfPath;
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -29,6 +29,7 @@ public class AdminResultDto {
         private String keywordId;
         private String keywordName;
         private Integer applicantScore;
+        private String scoreComment;
     }
 }
 
