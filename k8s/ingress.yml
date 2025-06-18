@@ -55,7 +55,7 @@ spec:
                 port:
                   number: 8000
           - path: /openapi.json
-            pathType: Prefix
+            pathType: Exact
             backend:
               service:
                 name: sk-team-03-ai-service
