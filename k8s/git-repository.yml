@@ -1,0 +1,15 @@
+# k8s/git-repository.yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sk-team-03-backend-spring-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository  # ← 이 라벨이 핵심!
+type: Opaque
+stringData:
+  type: git
+  url: https://github.com/SKALA-AXelerator/sk-team-03-backend-rev.git
+  name: sk-team-03-backend
+  username: kmh990303
+  password: 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
