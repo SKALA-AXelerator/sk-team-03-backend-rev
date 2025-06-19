@@ -24,7 +24,7 @@ public class FastApiClient {
 
     private WebClient webClient;
 
-    @Value("${fastapi.base-url:http://sk-team-03-ai-service:8000}")
+    @Value("${fastapi.base-url:https://intervia.skala25a.project.skala-ai.com/ai")
     private String fastApiBaseUrl;
 
     @Value("${fastapi.api-key:internal-api-key}")
