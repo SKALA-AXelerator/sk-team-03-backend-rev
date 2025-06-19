@@ -19,7 +19,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     @Query("SELECT a FROM Applicant a WHERE a.sessionId = :sessionId")
     List<Applicant> findBySessionId(@Param("sessionId") Integer sessionId);
 
-    @Query("SELECT a FROM Applicant a WHERE a.jobRole = :jobRoleId")
+    @Query("SELECT a FROM Applicant a WHERE a.jobRole.jobRoleId = :jobRoleId")
     List<Applicant> findByJobRoleId(@Param("jobRoleId") String jobRoleId);
 
     // ===== 지원자별 질문 조회 메서드 추가 =====
