@@ -48,7 +48,7 @@ public class FastApiClient {
             log.info("FastAPI 호출 시작: keywordName={}", request.getKeywordName());
 
             FastApiResponse response = webClient.post()
-                    .uri("/api/ai/generate-keyword-criteria")
+                    .uri("/ai/generate-keyword-criteria")
                     .bodyValue(request)
                     .retrieve()
                     .onStatus(
