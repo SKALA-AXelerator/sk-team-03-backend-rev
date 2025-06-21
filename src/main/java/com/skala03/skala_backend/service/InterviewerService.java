@@ -1,12 +1,13 @@
 package com.skala03.skala_backend.service;
 
 import com.skala03.skala_backend.dto.InterviewerResponse;
-import com.skala03.skala_backend.dto.InterviewScheduleRequest;
 import com.skala03.skala_backend.dto.InterviewScheduleResponse;
 import com.skala03.skala_backend.entity.Applicant;
+import com.skala03.skala_backend.entity.InterviewRoom;
 import com.skala03.skala_backend.entity.Session;
 import com.skala03.skala_backend.entity.User;
 import com.skala03.skala_backend.repository.ApplicantRepository;
+import com.skala03.skala_backend.repository.InterviewRoomRepository;
 import com.skala03.skala_backend.repository.SessionRepository;
 import com.skala03.skala_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,62 +23,139 @@ public class InterviewerService {
     private final SessionRepository sessionRepository;
     private final ApplicantRepository applicantRepository;
     private final UserRepository userRepository;
-
-    // 기존 기능 - 통계용
+    private final InterviewRoomRepository interviewRoomRepository;
+    /**
+     * 면접관이 참여하는 룸별 정보 조회 (간소화 버전)
+     */
     public InterviewerResponse getRoomsForInterviewer(String userId) {
+
+
         List<Session> sessions = sessionRepository.findByUserIdInInterviewers(userId);
+
+        if (sessions.isEmpty()) {
+            return new InterviewerResponse(new ArrayList<>());
+        }
+
+        Map<String, List<Session>> sessionsByRoom = sessions.stream()
+                .collect(Collectors.groupingBy(Session::getRoomId));
 
         List<InterviewerResponse.RoomInfo> roomList = new ArrayList<>();
 
-        for (Session session : sessions) {
-            // 1. 인터뷰어 리스트 가져오기
-            String[] interviewerIds = session.getInterviewersUserId().split(",");
-            List<InterviewerResponse.Interviewer> interviewers = Arrays.stream(interviewerIds)
-                    .map(id -> {
-                        User user = userRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("User not found: " + id));
-                        return new InterviewerResponse.Interviewer(user.getUserId(), user.getUserName());
-                    })
-                    .collect(Collectors.toList());
+        for (Map.Entry<String, List<Session>> entry : sessionsByRoom.entrySet()) {
+            String roomId = entry.getKey();
+            List<Session> roomSessions = entry.getValue();
 
-            // 2. 지원자 총 수
-            int totalCount = applicantRepository.countBySessionId(session.getSessionId());
-            // 3. 대기 중인 지원자 수
-            int remainingCount = applicantRepository.countWaitingBySessionId(session.getSessionId());
+            try {
+                InterviewRoom room = interviewRoomRepository.findById(roomId)
+                        .orElseThrow(() -> new RuntimeException("Room not found: " + roomId));
 
-            InterviewerResponse.RoomInfo roomInfo = new InterviewerResponse.RoomInfo(
-                    interviewers,
-                    totalCount,
-                    remainingCount
-            );
+                // 첫 번째 세션의 면접관 정보 사용 (모든 세션의 면접관이 동일)
+                List<InterviewerResponse.Interviewer> interviewers = new ArrayList<>();
 
-            roomList.add(roomInfo);
+                if (!roomSessions.isEmpty() && roomSessions.get(0).getInterviewersUserId() != null) {
+                    String[] interviewerIds = roomSessions.get(0).getInterviewersUserId().split(",");
+
+                    interviewers = Arrays.stream(interviewerIds)
+                            .map(String::trim)
+                            .filter(id -> !id.isEmpty())
+                            .map(id -> {
+                                User user = userRepository.findById(id).orElse(null);
+                                if (user != null) {
+                                    return new InterviewerResponse.Interviewer(user.getUserId(), user.getUserName());
+                                }
+                                return null;
+                            })
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                }
+
+                // ✅ 기존 메서드 사용하여 통계 계산
+                int totalCount = 0;
+                int remainingCount = 0;
+
+                for (Session session : roomSessions) {
+                    // sessionId를 int로 변환 (기존 메서드가 int 파라미터 사용)
+                    int sessionIdInt = session.getSessionId().intValue();
+
+                    totalCount += applicantRepository.countBySessionId(sessionIdInt);
+                    remainingCount += applicantRepository.countWaitingBySessionId(sessionIdInt);
+                }
+
+                InterviewerResponse.RoomInfo roomInfo = new InterviewerResponse.RoomInfo(
+                        roomId,
+                        room.getLeaderUserId(),
+                        interviewers,
+                        totalCount,
+                        remainingCount
+                );
+
+                roomList.add(roomInfo);
+
+            } catch (Exception e) {
+
+            }
         }
 
+        // 최종 결과만 정렬 (한 줄 추가)
+        roomList.sort(Comparator.comparing(InterviewerResponse.RoomInfo::getRoomId));
         return new InterviewerResponse(roomList);
     }
+    /**
+     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (기존 DTO 사용)
+     */
+    public List<InterviewScheduleResponse> getRoomSessions(String roomId) {
 
-    public List<InterviewScheduleResponse> getInterviewSchedules(List<String> interviewerIds) {
-        List<Session> sessions = sessionRepository.findAll().stream()
-                .filter(s -> {
-                    if (s.getInterviewersUserId() == null) return false;
-                    Set<String> sessionInterviewerSet = new HashSet<>(Arrays.asList(s.getInterviewersUserId().split(",")));
-                    return sessionInterviewerSet.containsAll(interviewerIds);  // ✅ 모든 ID가 포함되어야 통과
+
+        // 1. 룸 정보 조회
+        InterviewRoom room = interviewRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found: " + roomId));
+
+        // 2. 해당 룸의 모든 세션 조회
+        List<Session> sessions = sessionRepository.findByRoomId(roomId);
+
+        if (sessions.isEmpty()) {
+
+            return new ArrayList<>();
+        }
+
+        // 3. 각 세션을 InterviewScheduleResponse로 변환
+        List<InterviewScheduleResponse> responses = sessions.stream()
+                .map(session -> {
+                    try {
+                        // 지원자 목록 조회
+                        int sessionIdInt = session.getSessionId().intValue();
+                        List<Applicant> applicants = applicantRepository.findBySessionId(sessionIdInt);
+
+                        // ✅ 기존 ApplicantDto 사용
+                        List<InterviewScheduleResponse.ApplicantDto> applicantList = applicants.stream()
+                                .map(a -> new InterviewScheduleResponse.ApplicantDto(
+                                        a.getApplicantId(),   // id
+                                        a.getApplicantName()  // name
+                                ))
+                                .collect(Collectors.toList());
+
+                        // 면접 시간 포맷팅
+                        String interviewTime = session.getSessionTime().toString();
+                        // 또는 원하는 포맷으로:
+                        // String interviewTime = session.getSessionTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+
+                        // ✅ 기존 InterviewScheduleResponse 생성
+                        return new InterviewScheduleResponse(
+                                room.getRoomName(),  // interviewRoom
+                                interviewTime,       // interviewTime
+                                applicantList        // applicantList
+                        );
+
+                    } catch (Exception e) {
+
+                        return null;
+                    }
                 })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(InterviewScheduleResponse::getInterviewTime))  // 시간순 정렬
                 .collect(Collectors.toList());
 
-        return sessions.stream().map(session -> {
-            List<Applicant> applicants = applicantRepository.findBySessionId(session.getSessionId());
 
-            List<InterviewScheduleResponse.ApplicantDto> applicantDtos = applicants.stream()
-                    .map(a -> new InterviewScheduleResponse.ApplicantDto(a.getApplicantId(), a.getApplicantName()))
-                    .collect(Collectors.toList());
-
-            return new InterviewScheduleResponse(
-                    session.getRoomId(),
-                    session.getSessionTime().toString(),
-                    applicantDtos
-            );
-        }).collect(Collectors.toList());
+        return responses;
     }
 }

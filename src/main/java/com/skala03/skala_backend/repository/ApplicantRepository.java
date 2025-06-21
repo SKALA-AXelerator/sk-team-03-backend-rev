@@ -1,6 +1,7 @@
 package com.skala03.skala_backend.repository;
 
 import com.skala03.skala_backend.entity.Applicant;
+import com.skala03.skala_backend.entity.InterviewStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -78,4 +79,12 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     // JobRole과 함께 조회
     @Query("SELECT a FROM Applicant a JOIN FETCH a.jobRole WHERE a.applicantId = :applicantId")
     Optional<Applicant> findByIdWithJobRole(@Param("applicantId") String applicantId);
+
+
+
+
+
+
+
+
 }

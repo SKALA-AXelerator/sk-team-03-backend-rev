@@ -37,10 +37,10 @@ public class Session {
     @Enumerated(EnumType.STRING)
     @Column(name = "session_status")
     private SessionStatus sessionStatus = SessionStatus.SCHEDULED;
-
+    // ex) INT_A001,INT_A002
     @Column(name = "interviewers_user_id", length = 100)
     private String interviewersUserId;
-
+    // ex) A001,A002
     @Column(name = "applicants_user_id", length = 100)
     private String applicantsUserId;
 

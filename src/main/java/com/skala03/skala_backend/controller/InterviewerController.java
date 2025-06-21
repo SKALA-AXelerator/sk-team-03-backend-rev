@@ -1,7 +1,6 @@
 package com.skala03.skala_backend.controller;
 
 import com.skala03.skala_backend.dto.InterviewerResponse;
-import com.skala03.skala_backend.dto.InterviewScheduleRequest;
 import com.skala03.skala_backend.dto.InterviewScheduleResponse;
 import com.skala03.skala_backend.service.InterviewerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,17 +20,17 @@ public class InterviewerController {
     private final InterviewerService interviewerService;
 
     @GetMapping("/interviewer-text/{userId}")
-    @Operation(summary = "면접관 참여 세션 조회", description = "면접관 ID로 참여 중인 세션의 통계 정보를 조회합니다.")
+    @Operation(summary = "면접관 참여 룸 조회", description = "면접관 ID로 참여 중인 룸의 통계 정보를 조회합니다.")
     public ResponseEntity<InterviewerResponse> getInterviewerRooms(@PathVariable String userId) {
         InterviewerResponse response = interviewerService.getRoomsForInterviewer(userId);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/interview-schedule")
-    @Operation(summary = "면접관 스케줄 목록 조회", description = "면접관 ID 리스트로 세션 시간 및 지원자 목록을 조회합니다.")
-    public ResponseEntity<List<InterviewScheduleResponse>> getInterviewSchedules(
-            @RequestBody InterviewScheduleRequest request) {
-        List<InterviewScheduleResponse> schedules = interviewerService.getInterviewSchedules(request.getInterviewerIds());
-        return ResponseEntity.ok(schedules);
+    // ✅ 기존 DTO 재사용 - InterviewScheduleResponse
+    @GetMapping("/room-sessions/{roomId}")
+    @Operation(summary = "룸별 세션 목록 조회", description = "룸 ID로 해당 룸의 모든 세션과 지원자 정보를 조회합니다.")
+    public ResponseEntity<List<InterviewScheduleResponse>> getRoomSessions(@PathVariable String roomId) {
+        List<InterviewScheduleResponse> sessions = interviewerService.getRoomSessions(roomId);
+        return ResponseEntity.ok(sessions);
     }
 }
