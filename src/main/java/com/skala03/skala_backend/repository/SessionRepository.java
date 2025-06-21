@@ -22,4 +22,6 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
 
     @Query("SELECT s FROM Session s WHERE s.interviewersUserId LIKE %:userId%")
     List<Session> findByUserIdInInterviewers(String userId);
+
+    List<Session> findByRoomId(String roomId);
 }
