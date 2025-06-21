@@ -21,24 +21,28 @@ public class TranscriptionService {
 
     private final WebClient webClient;
 
-    public Mono<String> transcribe(File audioFile, String jwtToken) {
+    public Mono<String> transcribe(File audioFile, String jwtToken, Integer speakerCount) {
         FileSystemResource fileResource = new FileSystemResource(audioFile);
 
-        String configJson = """
-        {   "model_name": "sommers",
-            "use_diarization": true,
-            "diarization": {
-                "spk_count": 6
-            },
-            "use_itn": false,
-            "use_disfluency_filter": false,
-            "use_profanity_filter": false,
-            "use_paragraph_splitter": true,
-            "paragraph_splitter": {
-                "max": 50
-            }
+        // 기본값 설정 (파라미터가 없으면 6명)
+        int spkCount = (speakerCount != null) ? speakerCount : 6;
+
+        // JSON 설정을 동적으로 생성
+        String configJson = String.format("""
+    {   "model_name": "sommers",
+        "use_diarization": true,
+        "diarization": {
+            "spk_count": %d
+        },
+        "use_itn": false,
+        "use_disfluency_filter": false,
+        "use_profanity_filter": false,
+        "use_paragraph_splitter": true,
+        "paragraph_splitter": {
+            "max": 50
         }
-        """; // ✅ spk_count: 2로 줄임 (권장)
+    }
+    """, spkCount);
 
         MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
         formData.add("file", fileResource);
@@ -53,8 +57,8 @@ public class TranscriptionService {
                 .bodyToMono(String.class);
     }
 
-    public Mono<TranscriptionResult> transcribeAndPollResult(File audioFile, String jwtToken) {
-        return transcribe(audioFile, jwtToken)
+    public Mono<TranscriptionResult> transcribeAndPollResult(File audioFile, String jwtToken, Integer speakerCount) {
+        return transcribe(audioFile, jwtToken, speakerCount)
                 .flatMap(response -> {
                     String transcribeId = extractIdFromResponse(response);
                     return pollUntilComplete(transcribeId, jwtToken, 30);

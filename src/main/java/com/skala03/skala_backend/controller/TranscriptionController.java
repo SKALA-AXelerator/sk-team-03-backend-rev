@@ -30,7 +30,8 @@ public class TranscriptionController {
     @PostMapping("/upload-audio")
     @Operation(summary = "음성 파일 업로드", description = "stt+화자 분리로 텍스트를 받아옵니다.")
     public Mono<ResponseEntity<TranscriptionResult>> uploadAudio(
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "speakerCount", required = false) Integer speakerCount) throws IOException {
 
         // 1. 임시 디렉토리에 파일 저장
         Path tempDir = Files.createTempDirectory("");
@@ -41,7 +42,7 @@ public class TranscriptionController {
 
         // 2. 인증 토큰 획득 → 전사 처리 → 결과 응답
         return vitoAuthService.getAccessToken()
-                .flatMap(jwtToken -> transcriptionService.transcribeAndPollResult(audioFile, jwtToken))
+                .flatMap(jwtToken -> transcriptionService.transcribeAndPollResult(audioFile, jwtToken, speakerCount))
                 .timeout(Duration.ofMinutes(3))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
