@@ -31,7 +31,7 @@ public class ApplicantController {
 
     // 지원자별 질문 리스트 조회
     @PostMapping("/questions")
-    @Operation(summary = "지원자별 질문 리스트 조회", description = "지원자별 질문 리스트를 조회합니다.")
+    @Operation(summary = "지원자별 질문 리스트와 직무 조회", description = "지원자별 질문 리스트와 직무 정보를 조회합니다.")
     public ResponseEntity<ApplicantDto.QuestionsResponse> getApplicantQuestions(
             @RequestBody ApplicantDto.QuestionsRequest request) {
         try {

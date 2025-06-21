@@ -3,6 +3,7 @@ package com.skala03.skala_backend.service;
 import com.skala03.skala_backend.dto.ApplicantDto;
 import com.skala03.skala_backend.entity.Applicant;
 import com.skala03.skala_backend.entity.InterviewStatus;
+import com.skala03.skala_backend.entity.JobRole;
 import com.skala03.skala_backend.repository.ApplicantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,11 +31,22 @@ public class ApplicantService {
         return new ApplicantDto.ListResponse(applicantInfos);
     }
 
-    // 지원자별 질문 리스트 조회 (수정된 버전)
+    // ===== Service 메서드 수정 =====
     @Transactional(readOnly = true)
     public ApplicantDto.QuestionsResponse getApplicantQuestions(ApplicantDto.QuestionsRequest request) {
         List<Applicant> applicants = applicantRepository.findByApplicantIdIn(request.getApplicantIds());
 
+        if (applicants.isEmpty()) {
+            throw new IllegalArgumentException("지원자 정보를 찾을 수 없습니다.");
+        }
+
+        // 첫 번째 지원자의 직무 정보 조회 (모든 지원자가 같은 직무이므로)
+        JobRole jobRole = applicants.get(0).getJobRole();
+        ApplicantDto.JobRoleInfo jobRoleInfo = new ApplicantDto.JobRoleInfo(
+                jobRole.getJobRoleId()
+        );
+
+        // 지원자별 질문 정보 조회
         List<ApplicantDto.QuestionInfo> questionList = applicants.stream()
                 .map(applicant -> {
                     // 실제 DB에서 지원자별 질문 조회
@@ -48,7 +60,7 @@ public class ApplicantService {
                 })
                 .collect(Collectors.toList());
 
-        return new ApplicantDto.QuestionsResponse(questionList);
+        return new ApplicantDto.QuestionsResponse(jobRoleInfo, questionList);
     }
 
     // 지원자 평가 (AI 분석) - DB 데이터 사용 버전 (직무 정보 포함)

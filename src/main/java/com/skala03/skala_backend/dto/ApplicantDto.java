@@ -34,9 +34,15 @@ public class ApplicantDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class QuestionsResponse {
+        private JobRoleInfo jobRole;  // 직무 정보 추가
         private List<QuestionInfo> questionList;
     }
-
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class JobRoleInfo {
+        private String jobRoleId;
+    }
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
