@@ -7,15 +7,18 @@ import com.skala03.skala_backend.entity.Applicant;
 import com.skala03.skala_backend.entity.ApplicantKeywordScore;
 import com.skala03.skala_backend.entity.Keyword;
 import com.skala03.skala_backend.entity.Session;
+import com.skala03.skala_backend.entity.User;
 import com.skala03.skala_backend.repository.AdminResultRepository;
 import com.skala03.skala_backend.repository.ApplicantKeywordScoreRepository;
 import com.skala03.skala_backend.repository.KeywordRepository;
 import com.skala03.skala_backend.repository.SessionRepository;
+import com.skala03.skala_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +32,8 @@ public class AdminResultService {
     private final AdminResultRepository adminResultRepository;
     private final SessionRepository sessionRepository;
     private final ApplicantKeywordScoreRepository keywordScoreRepository;
-    private final KeywordRepository keywordRepository; // 추가
+    private final KeywordRepository keywordRepository;
+    private final UserRepository userRepository; // ✅ UserRepository 추가
 
     public List<AdminResultDto> getJobRoleResults(String jobRoleId) {
         List<Applicant> applicants = adminResultRepository.findApplicantsByJobRoleId(jobRoleId);
@@ -64,12 +68,41 @@ public class AdminResultService {
             Optional<Session> sessionOpt = sessionRepository.findById(applicant.getSessionId());
             if (sessionOpt.isPresent()) {
                 Session session = sessionOpt.get();
-                dto.setInterviewer(session.getInterviewersUserId());
+
+                // ✅ 면접관 아이디들을 이름으로 변환
+                String interviewerNames = convertInterviewerIdsToNames(session.getInterviewersUserId());
+                dto.setInterviewer(interviewerNames);
+
                 dto.setInterviewDate(session.getSessionDate().toLocalDate().toString());
                 dto.setSessionTime(session.getSessionTime().toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
                 dto.setSessionLocation(session.getSessionLocation());
             }
         }
+    }
+
+    /**
+     * ✅ 면접관 아이디 문자열을 면접관 이름 문자열로 변환
+     * 예: "sk-01,sk-02,sk-03" → "김철수, 박영희, 이민수"
+     */
+    private String convertInterviewerIdsToNames(String interviewerIds) {
+        if (interviewerIds == null || interviewerIds.trim().isEmpty()) {
+            return "";
+        }
+
+        // 쉼표로 구분된 아이디들을 파싱
+        List<String> idList = Arrays.stream(interviewerIds.split(","))
+                .map(String::trim)
+                .filter(id -> !id.isEmpty())
+                .collect(Collectors.toList());
+
+        // 각 아이디로 사용자 이름 조회 (성능 최적화를 위해 배치 조회도 가능)
+        List<String> nameList = idList.stream()
+                .map(id -> userRepository.findById(id)
+                        .map(User::getUserName)
+                        .orElse("Unknown")) // 사용자를 찾을 수 없는 경우 "Unknown"
+                .collect(Collectors.toList());
+
+        return String.join(", ", nameList);
     }
 
     private void setKeywordScores(AdminResultDto dto, Applicant applicant) {
