@@ -9,15 +9,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import com.skala03.skala_backend.dto.InterviewProcessingDto;
+
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
-import java.util.List;  // ← 추가
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
@@ -33,74 +42,43 @@ public class FastApiClient {
 
     @PostConstruct
     public void init() {
-        // FastAPI 전용 WebClient 생성 (기존 WebClient와 분리)
+        // 🔧 연결 풀 설정 (성능 및 안정성 향상)
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("fastapi-pool")
+                .maxConnections(50)          // 최대 연결 수
+                .maxIdleTime(Duration.ofMinutes(2))    // 유휴 연결 유지 시간
+                .maxLifeTime(Duration.ofMinutes(10))   // 연결 최대 수명
+                .pendingAcquireTimeout(Duration.ofSeconds(30)) // 연결 대기 타임아웃
+                .evictInBackground(Duration.ofSeconds(30))     // 백그라운드 정리
+                .build();
+
+        // 🔧 HttpClient 타임아웃 설정 (핵심 문제 해결)
+        HttpClient httpClient = HttpClient.create(connectionProvider)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30_000) // 연결 타임아웃: 30초
+                .responseTimeout(Duration.ofMinutes(12)) // 응답 타임아웃: 12분 (여유있게)
+                .doOnConnected(conn ->
+                        conn.addHandlerLast(new ReadTimeoutHandler(12, TimeUnit.MINUTES))   // 읽기 타임아웃: 12분
+                                .addHandlerLast(new WriteTimeoutHandler(5, TimeUnit.MINUTES))); // 쓰기 타임아웃: 5분
+
+        // 🔧 WebClient 생성 (최적화된 설정)
         this.webClient = WebClient.builder()
                 .baseUrl(fastApiBaseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient)) // ✅ HttpClient 연결
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("X-API-KEY", apiKey)
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024)) // 50MB로 증가
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(100 * 1024 * 1024)) // 100MB
                 .build();
+
+        log.info("✅ FastAPI WebClient 초기화 완료: baseUrl={}, 타임아웃=12분", fastApiBaseUrl);
     }
 
-    // ===== 기존 키워드 생성 메서드 =====
+    // ===== 기존 키워드 생성 메서드 (개선됨) =====
     public FastApiResponse generateKeywordCriteria(FastApiRequest request) {
         try {
-            // job_role_id 제거 후 로그 수정
-            log.info("FastAPI 호출 시작: keywordName={}", request.getKeywordName());
+            log.info("FastAPI 키워드 생성 호출: keywordName={}", request.getKeywordName());
 
             FastApiResponse response = webClient.post()
                     .uri("/ai/generate-keyword-criteria")
-                    .bodyValue(request)
-                    .retrieve()
-                    .onStatus(
-                            httpStatus -> httpStatus.value() >= 400, // 400 이상의 모든 에러 상태 코드
-                            clientResponse -> {
-                                log.error("FastAPI 오류: status={}", clientResponse.statusCode());
-                                return clientResponse.bodyToMono(String.class)
-                                        .defaultIfEmpty("No error body")
-                                        .doOnNext(body -> log.error("FastAPI 오류 응답: {}", body))
-                                        .flatMap(body -> Mono.error(new RuntimeException("FastAPI 호출 실패 (status: " +
-                                                clientResponse.statusCode() + "): " + body)));
-                            }
-                    )
-                    .bodyToMono(FastApiResponse.class)
-                    .timeout(Duration.ofMinutes(3))
-                    .doOnSuccess(res -> {
-                        if (res != null && res.isSuccess()) {
-                            log.info("FastAPI 호출 성공: keywordName={}, 생성된 기준 수={}",
-                                    res.getKeywordName(), res.getCriteria() != null ? res.getCriteria().size() : 0);
-                        }
-                    })
-                    .doOnError(error -> log.error("FastAPI 호출 오류: ", error))
-                    .block();
-
-            if (response == null) {
-                throw new RuntimeException("FastAPI 응답이 null입니다.");
-            }
-
-            return response;
-
-        } catch (WebClientResponseException e) {
-            log.error("FastAPI WebClient 응답 오류: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("FastAPI 호출 실패: " + e.getMessage());
-        } catch (Exception e) {
-            log.error("FastAPI 클라이언트 오류: ", e);
-            throw new RuntimeException("AI 키워드 생성 서비스 호출에 실패했습니다: " + e.getMessage());
-        }
-    }
-
-    // ===== 🆕 새로 추가: Full Pipeline 메서드 =====
-    /**
-     * FastAPI full-pipeline 엔드포인트 호출
-     */
-    public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
-        try {
-            log.info("📤 FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
-                    request.getSessionId(), request.getApplicantIds().size());
-
-            FastApiPipelineResponse response = webClient.post()
-                    .uri("/ai/full-pipeline")
                     .bodyValue(request)
                     .retrieve()
                     .onStatus(
@@ -114,15 +92,19 @@ public class FastApiClient {
                                                 clientResponse.statusCode() + "): " + body)));
                             }
                     )
-                    .bodyToMono(FastApiPipelineResponse.class)
-                    .timeout(Duration.ofMinutes(10))  // 면접 처리는 시간이 오래 걸릴 수 있음
+                    .bodyToMono(FastApiResponse.class)
+                    .timeout(Duration.ofMinutes(3)) // WebClient 레벨 타임아웃
+                    // 🔧 재시도 로직 추가
+                    .retryWhen(Retry.backoff(2, Duration.ofSeconds(5))
+                            .filter(throwable -> !(throwable instanceof WebClientResponseException
+                                    && ((WebClientResponseException) throwable).getStatusCode().is4xxClientError())))
                     .doOnSuccess(res -> {
                         if (res != null && res.isSuccess()) {
-                            log.info("✅ FastAPI 호출 성공: sessionId={}, 성공/실패={}/{}, 처리시간={}초",
-                                    res.getSessionId(), res.getSuccessfulCount(), res.getFailedCount(), res.getTotalProcessingTime());
+                            log.info("✅ 키워드 생성 성공: keywordName={}, 기준수={}",
+                                    res.getKeywordName(), res.getCriteria() != null ? res.getCriteria().size() : 0);
                         }
                     })
-                    .doOnError(error -> log.error("❌ FastAPI 호출 오류: ", error))
+                    .doOnError(error -> log.error("❌ 키워드 생성 오류: ", error))
                     .block();
 
             if (response == null) {
@@ -131,34 +113,96 @@ public class FastApiClient {
 
             return response;
 
-        } catch (WebClientResponseException e) {
-            log.error("FastAPI WebClient 응답 오류: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("FastAPI 호출 실패: " + e.getMessage());
         } catch (Exception e) {
-            log.error("FastAPI 클라이언트 오류: ", e);
+            log.error("❌ FastAPI 키워드 생성 클라이언트 오류: ", e);
+            throw new RuntimeException("AI 키워드 생성 서비스 호출에 실패했습니다: " + e.getMessage());
+        }
+    }
+
+    // ===== 🆕 Full Pipeline 메서드 (타임아웃 최적화) =====
+    public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
+        try {
+            log.info("📤 FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
+                    request.getSessionId(), request.getApplicantIds().size());
+
+            FastApiPipelineResponse response = webClient.post()
+                    .uri("/ai/full-pipeline")
+                    .bodyValue(request)
+                    .retrieve()
+                    .onStatus(
+                            httpStatus -> httpStatus.value() >= 400,
+                            clientResponse -> {
+                                log.error("FastAPI Pipeline 오류: status={}", clientResponse.statusCode());
+                                return clientResponse.bodyToMono(String.class)
+                                        .defaultIfEmpty("No error body")
+                                        .doOnNext(body -> log.error("FastAPI Pipeline 오류 응답: {}", body))
+                                        .flatMap(body -> Mono.error(new RuntimeException("FastAPI Pipeline 실패 (status: " +
+                                                clientResponse.statusCode() + "): " + body)));
+                            }
+                    )
+                    .bodyToMono(FastApiPipelineResponse.class)
+                    .timeout(Duration.ofMinutes(10)) // WebClient 레벨 타임아웃 (HttpClient보다 짧게)
+                    // 🔧 재시도 로직 (네트워크 오류만)
+                    .retryWhen(Retry.backoff(2, Duration.ofSeconds(10))
+                            .filter(throwable -> {
+                                // 4xx 에러는 재시도하지 않음 (클라이언트 오류)
+                                if (throwable instanceof WebClientResponseException) {
+                                    WebClientResponseException ex = (WebClientResponseException) throwable;
+                                    return !ex.getStatusCode().is4xxClientError();
+                                }
+                                // 네트워크 오류, 타임아웃 등은 재시도
+                                return true;
+                            })
+                            .doBeforeRetry(retrySignal ->
+                                    log.warn("🔄 FastAPI Pipeline 재시도: attempt={}, error={}",
+                                            retrySignal.totalRetries() + 1, retrySignal.failure().getMessage())))
+                    .doOnSuccess(res -> {
+                        if (res != null && res.isSuccess()) {
+                            log.info("✅ FastAPI Pipeline 성공: sessionId={}, 성공/실패={}/{}, 처리시간={}초",
+                                    res.getSessionId(), res.getSuccessfulCount(), res.getFailedCount(),
+                                    res.getTotalProcessingTime());
+                        } else if (res != null) {
+                            log.warn("⚠️ FastAPI Pipeline 부분 실패: sessionId={}, message={}",
+                                    res.getSessionId(), res.getMessage());
+                        }
+                    })
+                    .doOnError(error -> {
+                        log.error("❌ FastAPI Pipeline 오류: sessionId={}, error={}",
+                                request.getSessionId(), error.getMessage());
+                    })
+                    .block();
+
+            if (response == null) {
+                throw new RuntimeException("FastAPI Pipeline 응답이 null입니다.");
+            }
+
+            return response;
+
+        } catch (Exception e) {
+            log.error("❌ FastAPI Pipeline 클라이언트 오류: sessionId={}", request.getSessionId(), e);
             throw new RuntimeException("면접 처리 서비스 호출에 실패했습니다: " + e.getMessage());
         }
     }
 
-    // 헬스체크 메서드
+    // 헬스체크 메서드 (개선됨)
     public boolean isHealthy() {
         try {
             String response = webClient.get()
-                    .uri("/ai/health2")  // health2로 변경
+                    .uri("/ai/health2")
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(10))
+                    .timeout(Duration.ofSeconds(15)) // 헬스체크는 짧은 타임아웃
                     .block();
 
-            log.debug("FastAPI 헬스체크 성공: {}", response);
+            log.debug("✅ FastAPI 헬스체크 성공: {}", response);
             return true;
         } catch (Exception e) {
-            log.warn("FastAPI 헬스체크 실패: {}", e.getMessage());
+            log.warn("❌ FastAPI 헬스체크 실패: {}", e.getMessage());
             return false;
         }
     }
 
-    // ===== 기존 키워드 생성용 DTO =====
+    // ===== DTO 클래스들 (기존과 동일) =====
     @Data
     @Builder
     @NoArgsConstructor
@@ -178,7 +222,7 @@ public class FastApiClient {
     public static class FastApiResponse {
         private boolean success;
         private String message;
-        private Map<Integer, String> criteria; // score -> guideline 매핑
+        private Map<Integer, String> criteria;
 
         @JsonProperty("keyword_name")
         private String keywordName;
@@ -187,7 +231,6 @@ public class FastApiClient {
         private String errorDetail;
     }
 
-    // ===== 🆕 새로 추가: Full Pipeline용 DTO =====
     @Data
     @Builder
     @NoArgsConstructor
