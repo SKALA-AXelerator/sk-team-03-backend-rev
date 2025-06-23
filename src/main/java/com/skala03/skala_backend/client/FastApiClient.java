@@ -42,21 +42,21 @@ public class FastApiClient {
 
     @PostConstruct
     public void init() {
-        // 🔧 연결 풀 설정 (적정 수준으로 조정)
+        // 🔧 연결 풀 설정
         ConnectionProvider connectionProvider = ConnectionProvider.builder("fastapi-pool")
-                .maxConnections(30)          // 적정 연결 수
+                .maxConnections(30)
                 .maxIdleTime(Duration.ofMinutes(2))
-                .maxLifeTime(Duration.ofMinutes(5))   // 연결 수명 단축
-                .pendingAcquireTimeout(Duration.ofSeconds(20)) // 연결 대기 시간 단축
+                .maxLifeTime(Duration.ofMinutes(5))
+                .pendingAcquireTimeout(Duration.ofSeconds(20))
                 .evictInBackground(Duration.ofSeconds(30))
                 .build();
 
-        // 🔧 HttpClient 타임아웃 설정 (4분 기준)
+        // 🔧 HttpClient 전역 타임아웃 설정 (5분)
         HttpClient httpClient = HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15_000) // 연결 타임아웃: 15초
-                .responseTimeout(Duration.ofMinutes(4)) // ✅ 응답 타임아웃: 4분
+                .responseTimeout(Duration.ofMinutes(5)) // ✅ 전역 응답 타임아웃: 5분
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(4, TimeUnit.MINUTES))   // ✅ 읽기 타임아웃: 4분
+                        conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.MINUTES))   // ✅ 전역 읽기 타임아웃: 5분
                                 .addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.MINUTES))); // 쓰기 타임아웃: 1분
 
         // 🔧 WebClient 생성
@@ -69,10 +69,10 @@ public class FastApiClient {
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(70 * 1024 * 1024)) // 70MB
                 .build();
 
-        log.info("✅ FastAPI WebClient 초기화 완료: baseUrl={}, 응답타임아웃=4분, Pipeline타임아웃=3분", fastApiBaseUrl);
+        log.info("✅ FastAPI WebClient 초기화 완료: baseUrl={}, 전역타임아웃=5분", fastApiBaseUrl);
     }
 
-    // ===== 키워드 생성 메서드 =====
+    // ===== 키워드 생성 메서드 (타임아웃 제거) =====
     public FastApiResponse generateKeywordCriteria(FastApiRequest request) {
         try {
             log.info("FastAPI 키워드 생성 호출: keywordName={}", request.getKeywordName());
@@ -93,7 +93,7 @@ public class FastApiClient {
                             }
                     )
                     .bodyToMono(FastApiResponse.class)
-                    .timeout(Duration.ofMinutes(1)) // 키워드 생성: 1분
+                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .retryWhen(Retry.backoff(2, Duration.ofSeconds(3))
                             .filter(throwable -> !(throwable instanceof WebClientResponseException
                                     && ((WebClientResponseException) throwable).getStatusCode().is4xxClientError())))
@@ -118,7 +118,7 @@ public class FastApiClient {
         }
     }
 
-    // ===== 🆕 Full Pipeline 메서드 (3분 타임아웃) =====
+    // ===== Full Pipeline 메서드 (타임아웃 제거) =====
     public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
         try {
             log.info("📤 FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
@@ -140,7 +140,7 @@ public class FastApiClient {
                             }
                     )
                     .bodyToMono(FastApiPipelineResponse.class)
-                    .timeout(Duration.ofMinutes(3)) // ✅ Full Pipeline: 3분
+                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .retryWhen(Retry.backoff(1, Duration.ofSeconds(10)) // 재시도 1회
                             .filter(throwable -> {
                                 // 4xx 에러는 재시도하지 않음
@@ -182,14 +182,14 @@ public class FastApiClient {
         }
     }
 
-    // 헬스체크 메서드 (빠른 응답)
+    // 헬스체크 메서드 (타임아웃 제거)
     public boolean isHealthy() {
         try {
             String response = webClient.get()
                     .uri("/ai/health2")
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(10)) // 헬스체크: 10초
+                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .block();
 
             log.debug("✅ FastAPI 헬스체크 성공: {}", response);
