@@ -109,7 +109,7 @@ public class InterviewSessionService {
         return result;
     }
     /**
-     * 참가자 상태 조회 - Map으로 직접 반환
+     * 참가자 상태 조회 - Map으로 직접 반환 (세션ID 포함)
      */
     public Map<String, Object> getParticipantStatus(String roomId, String userId) {
         RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
@@ -118,6 +118,11 @@ public class InterviewSessionService {
         Map<String, Object> result = new HashMap<>();
         result.put("status", participant.getParticipantStatus());
         result.put("lastPingAt", participant.getLastPingAt());
+
+        // ✅ 세션ID 추가
+        Integer sessionId = sessionRepository.findCurrentSessionIdByRoomAndUser(roomId, userId)
+                .orElse(null);
+        result.put("sessionId", sessionId);
 
         return result;
     }

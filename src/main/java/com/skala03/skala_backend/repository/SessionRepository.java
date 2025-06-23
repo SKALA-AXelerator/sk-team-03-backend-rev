@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Integer> {
@@ -24,4 +25,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
     List<Session> findByUserIdInInterviewers(String userId);
 
     List<Session> findByRoomId(String roomId);
+
+    @Query("SELECT s.sessionId FROM Session s WHERE s.roomId = :roomId AND s.interviewersUserId LIKE %:userId% AND s.sessionStatus IN ('IN_PROGRESS', 'WAITING', 'SCHEDULED') ORDER BY s.sessionStatus DESC, s.sessionDate ASC")
+    Optional<Integer> findCurrentSessionIdByRoomAndUser(@Param("roomId") String roomId, @Param("userId") String userId);
 }
