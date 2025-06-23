@@ -1,7 +1,5 @@
 package com.skala03.skala_backend.controller;
 
-
-
 import com.skala03.skala_backend.dto.InterviewProcessingDto;
 import com.skala03.skala_backend.service.InterviewProcessingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.Map;
 
 @RestController
@@ -24,8 +24,8 @@ public class InterviewProcessingController {
 
     @PostMapping("/process-full-pipeline")
     @Operation(summary = "면접 전체 파이프라인 처리",
-            description = "STT 데이터를 받아 AI 분석 후 평가 결과를 DB에 저장합니다. 직무명으로 DB에서 평가기준을 자동 조회합니다.")
-    public ResponseEntity<InterviewProcessingDto.ProcessingResponse> processFullPipeline(
+            description = "STT 데이터를 받아 백그라운드에서 AI 분석을 시작합니다. 즉시 작업 ID를 반환하여 504 타임아웃을 방지합니다.")
+    public ResponseEntity<Map<String, Object>> processFullPipeline(
             @RequestBody InterviewProcessingDto.ProcessingRequest request) {
 
         try {
@@ -34,84 +34,90 @@ public class InterviewProcessingController {
                     request.getApplicantIds() != null ? request.getApplicantIds().size() : 0);
 
             // 입력 검증
-            if (request.getSessionId() == null) {
-                return ResponseEntity.badRequest().body(
-                        InterviewProcessingDto.ProcessingResponse.builder()
-                                .success(false)
-                                .message("세션 ID는 필수입니다.")
-                                .build()
-                );
-            }
+            validateRequest(request);
 
-            if (request.getJobRoleName() == null || request.getJobRoleName().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        InterviewProcessingDto.ProcessingResponse.builder()
-                                .success(false)
-                                .message("직무명은 필수입니다.")
-                                .build()
-                );
-            }
+            // 고유한 작업 ID 생성
+            String jobId = UUID.randomUUID().toString();
 
-            if (request.getApplicantIds() == null || request.getApplicantIds().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        InterviewProcessingDto.ProcessingResponse.builder()
-                                .success(false)
-                                .message("지원자 ID 목록은 필수입니다.")
-                                .build()
-                );
-            }
+            // 🚀 비동기로 처리 시작 (즉시 반환)
+            CompletableFuture.runAsync(() -> {
+                try {
+                    log.info("🔄 백그라운드 처리 시작: jobId={}, sessionId={}", jobId, request.getSessionId());
 
-            if (request.getApplicantNames() == null || request.getApplicantNames().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        InterviewProcessingDto.ProcessingResponse.builder()
-                                .success(false)
-                                .message("지원자 이름 목록은 필수입니다.")
-                                .build()
-                );
-            }
+                    // 실제 처리 수행
+                    InterviewProcessingDto.ProcessingResponse result =
+                            interviewProcessingService.processFullPipeline(request);
 
-            if (request.getRawStt() == null) {
-                return ResponseEntity.badRequest().body(
-                        InterviewProcessingDto.ProcessingResponse.builder()
-                                .success(false)
-                                .message("STT 데이터는 필수입니다.")
-                                .build()
-                );
-            }
+                    if (result.isSuccess()) {
+                        log.info("✅ 백그라운드 처리 완료: jobId={}, sessionId={}, 성공={}, 실패={}",
+                                jobId, request.getSessionId(), result.getSuccessfulCount(), result.getFailedCount());
+                    } else {
+                        log.error("❌ 백그라운드 처리 실패: jobId={}, sessionId={}, message={}",
+                                jobId, request.getSessionId(), result.getMessage());
+                    }
 
-            // 서비스 호출
-            InterviewProcessingDto.ProcessingResponse response =
-                    interviewProcessingService.processFullPipeline(request);
+                } catch (Exception e) {
+                    log.error("❌ 백그라운드 처리 중 예외 발생: jobId={}, sessionId={}, error={}",
+                            jobId, request.getSessionId(), e.getMessage(), e);
+                }
+            });
 
-            if (response.isSuccess()) {
-                log.info("✅ 면접 처리 완료: sessionId={}, 성공/실패={}/{}",
-                        response.getSessionId(), response.getSuccessfulCount(), response.getFailedCount());
-                return ResponseEntity.ok(response);
-            } else {
-                log.error("❌ 면접 처리 실패: sessionId={}, message={}",
-                        response.getSessionId(), response.getMessage());
-                return ResponseEntity.internalServerError().body(response);
-            }
+            // 즉시 작업 시작 응답 반환
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "jobId", jobId,
+                    "sessionId", request.getSessionId(),
+                    "status", "PROCESSING_STARTED",
+                    "message", "면접 처리가 백그라운드에서 시작되었습니다.",
+                    "totalApplicants", request.getApplicantIds().size(),
+                    "estimatedTime", "약 3-5분 소요 예상",
+                    "note", "처리가 완료되면 해당 세션의 지원자 상태가 업데이트됩니다."
+            ));
 
         } catch (IllegalArgumentException e) {
-            log.error("잘못된 요청: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(
-                    InterviewProcessingDto.ProcessingResponse.builder()
-                            .success(false)
-                            .message("잘못된 요청: " + e.getMessage())
-                            .build()
-            );
+            log.error("❌ 잘못된 요청: sessionId={}, error={}", request.getSessionId(), e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "INVALID_REQUEST",
+                    "message", e.getMessage(),
+                    "sessionId", request.getSessionId() != null ? request.getSessionId() : "unknown"
+            ));
 
         } catch (Exception e) {
-            log.error("면접 처리 중 서버 오류: ", e);
-            return ResponseEntity.internalServerError().body(
-                    InterviewProcessingDto.ProcessingResponse.builder()
-                            .success(false)
-                            .message("서버 내부 오류가 발생했습니다: " + e.getMessage())
-                            .build()
-            );
+            log.error("❌ 면접 처리 시작 중 서버 오류: sessionId={}, error={}",
+                    request.getSessionId(), e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "error", "INTERNAL_SERVER_ERROR",
+                    "message", "서버 내부 오류가 발생했습니다: " + e.getMessage(),
+                    "sessionId", request.getSessionId() != null ? request.getSessionId() : "unknown"
+            ));
         }
     }
 
+    private void validateRequest(InterviewProcessingDto.ProcessingRequest request) {
+        if (request.getSessionId() == null) {
+            throw new IllegalArgumentException("세션 ID는 필수입니다.");
+        }
 
+        if (request.getJobRoleName() == null || request.getJobRoleName().trim().isEmpty()) {
+            throw new IllegalArgumentException("직무명은 필수입니다.");
+        }
+
+        if (request.getApplicantIds() == null || request.getApplicantIds().isEmpty()) {
+            throw new IllegalArgumentException("지원자 ID 목록은 필수입니다.");
+        }
+
+        if (request.getApplicantNames() == null || request.getApplicantNames().isEmpty()) {
+            throw new IllegalArgumentException("지원자 이름 목록은 필수입니다.");
+        }
+
+        if (request.getApplicantIds().size() != request.getApplicantNames().size()) {
+            throw new IllegalArgumentException("지원자 ID와 이름 목록의 개수가 일치하지 않습니다.");
+        }
+
+        if (request.getRawStt() == null) {
+            throw new IllegalArgumentException("STT 데이터는 필수입니다.");
+        }
+    }
 }
