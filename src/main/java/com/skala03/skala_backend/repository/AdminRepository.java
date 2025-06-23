@@ -66,4 +66,27 @@ public interface AdminRepository extends JpaRepository<Keyword, Integer> {
     @Query(value = "INSERT INTO job_role_keywords (job_role_id, keyword_id, selected) VALUES (:jobRoleId, :keywordId, :selected) " +
             "ON DUPLICATE KEY UPDATE selected = :selected", nativeQuery = true)
     void upsertJobRoleKeyword(@Param("jobRoleId") String jobRoleId, @Param("keywordId") Integer keywordId, @Param("selected") Boolean selected);
+
+    /**
+     * 직무명으로 해당 직무에 연결된 모든 키워드의 평가 기준 조회
+     * @param jobRoleName 직무명 (예: "AI/Data", "반도체", "제조", "금융")
+     * @return Object[] 배열 리스트 - [keyword_id, keyword_name, keyword_score, keyword_guideline]
+     */
+    @Query(value = """
+        SELECT 
+            k.keyword_id,
+            k.keyword_name, 
+            kc.keyword_score,
+            kc.keyword_guideline
+        FROM job_roles jr
+        JOIN job_role_keywords jrk ON jr.job_role_id = jrk.job_role_id
+        JOIN keywords k ON jrk.keyword_id = k.keyword_id  
+        JOIN keyword_criteria kc ON k.keyword_id = kc.keyword_id
+        WHERE jr.job_role_name = :jobRoleName 
+            AND jrk.selected = true
+        ORDER BY k.keyword_id, kc.keyword_score DESC
+        """, nativeQuery = true)
+    List<Object[]> findEvaluationCriteriaByJobRoleName(@Param("jobRoleName") String jobRoleName);
+
+
 }

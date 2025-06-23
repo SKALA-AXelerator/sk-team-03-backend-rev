@@ -41,7 +41,7 @@ public class ApplicantDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class JobRoleInfo {
-        private String jobRoleId;
+        private String jobRoleName;
     }
     @Data
     @NoArgsConstructor

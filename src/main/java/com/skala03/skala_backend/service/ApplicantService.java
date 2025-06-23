@@ -43,7 +43,7 @@ public class ApplicantService {
         // 첫 번째 지원자의 직무 정보 조회 (모든 지원자가 같은 직무이므로)
         JobRole jobRole = applicants.get(0).getJobRole();
         ApplicantDto.JobRoleInfo jobRoleInfo = new ApplicantDto.JobRoleInfo(
-                jobRole.getJobRoleId()
+                jobRole.getJobRoleName()  // 🔧 jobRoleName만 사용
         );
 
         // 지원자별 질문 정보 조회
@@ -62,7 +62,6 @@ public class ApplicantService {
 
         return new ApplicantDto.QuestionsResponse(jobRoleInfo, questionList);
     }
-
     // 지원자 평가 (AI 분석) - DB 데이터 사용 버전 (직무 정보 포함)
     public List<ApplicantDto.EvaluationResponse> evaluateApplicants(ApplicantDto.EvaluationRequest request) {
         List<String> applicantIds = request.getApplicantIds();
