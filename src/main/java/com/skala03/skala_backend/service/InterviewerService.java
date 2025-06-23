@@ -24,11 +24,11 @@ public class InterviewerService {
     private final ApplicantRepository applicantRepository;
     private final UserRepository userRepository;
     private final InterviewRoomRepository interviewRoomRepository;
+
     /**
      * 면접관이 참여하는 룸별 정보 조회 (간소화 버전)
      */
     public InterviewerResponse getRoomsForInterviewer(String userId) {
-
 
         List<Session> sessions = sessionRepository.findByUserIdInInterviewers(userId);
 
@@ -92,7 +92,7 @@ public class InterviewerService {
                 roomList.add(roomInfo);
 
             } catch (Exception e) {
-
+                // 로그 처리
             }
         }
 
@@ -100,11 +100,11 @@ public class InterviewerService {
         roomList.sort(Comparator.comparing(InterviewerResponse.RoomInfo::getRoomId));
         return new InterviewerResponse(roomList);
     }
+
     /**
-     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (기존 DTO 사용)
+     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (sessionId 포함)
      */
     public List<InterviewScheduleResponse> getRoomSessions(String roomId) {
-
 
         // 1. 룸 정보 조회
         InterviewRoom room = interviewRoomRepository.findById(roomId)
@@ -114,7 +114,6 @@ public class InterviewerService {
         List<Session> sessions = sessionRepository.findByRoomId(roomId);
 
         if (sessions.isEmpty()) {
-
             return new ArrayList<>();
         }
 
@@ -139,22 +138,21 @@ public class InterviewerService {
                         // 또는 원하는 포맷으로:
                         // String interviewTime = session.getSessionTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
-                        // ✅ 기존 InterviewScheduleResponse 생성
+                        // ✅ sessionId 포함한 InterviewScheduleResponse 생성
                         return new InterviewScheduleResponse(
-                                room.getRoomName(),  // interviewRoom
-                                interviewTime,       // interviewTime
-                                applicantList        // applicantList
+                                session.getSessionId(),  // sessionId 추가
+                                room.getRoomName(),      // interviewRoom
+                                interviewTime,           // interviewTime
+                                applicantList            // applicantList
                         );
 
                     } catch (Exception e) {
-
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(InterviewScheduleResponse::getInterviewTime))  // 시간순 정렬
                 .collect(Collectors.toList());
-
 
         return responses;
     }
