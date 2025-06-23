@@ -13,9 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-
+import com.skala03.skala_backend.dto.InterviewProcessingDto;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
+import java.util.List;  // ← 추가
 import java.util.Map;
 
 @Component
@@ -38,10 +39,11 @@ public class FastApiClient {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("X-API-KEY", apiKey)
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024)) // 50MB로 증가
                 .build();
     }
 
+    // ===== 기존 키워드 생성 메서드 =====
     public FastApiResponse generateKeywordCriteria(FastApiRequest request) {
         try {
             // job_role_id 제거 후 로그 수정
@@ -88,11 +90,61 @@ public class FastApiClient {
         }
     }
 
+    // ===== 🆕 새로 추가: Full Pipeline 메서드 =====
+    /**
+     * FastAPI full-pipeline 엔드포인트 호출
+     */
+    public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
+        try {
+            log.info("📤 FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
+                    request.getSessionId(), request.getApplicantIds().size());
+
+            FastApiPipelineResponse response = webClient.post()
+                    .uri("/ai/full-pipeline")
+                    .bodyValue(request)
+                    .retrieve()
+                    .onStatus(
+                            httpStatus -> httpStatus.value() >= 400,
+                            clientResponse -> {
+                                log.error("FastAPI 오류: status={}", clientResponse.statusCode());
+                                return clientResponse.bodyToMono(String.class)
+                                        .defaultIfEmpty("No error body")
+                                        .doOnNext(body -> log.error("FastAPI 오류 응답: {}", body))
+                                        .flatMap(body -> Mono.error(new RuntimeException("FastAPI 호출 실패 (status: " +
+                                                clientResponse.statusCode() + "): " + body)));
+                            }
+                    )
+                    .bodyToMono(FastApiPipelineResponse.class)
+                    .timeout(Duration.ofMinutes(10))  // 면접 처리는 시간이 오래 걸릴 수 있음
+                    .doOnSuccess(res -> {
+                        if (res != null && res.isSuccess()) {
+                            log.info("✅ FastAPI 호출 성공: sessionId={}, 성공/실패={}/{}, 처리시간={}초",
+                                    res.getSessionId(), res.getSuccessfulCount(), res.getFailedCount(), res.getTotalProcessingTime());
+                        }
+                    })
+                    .doOnError(error -> log.error("❌ FastAPI 호출 오류: ", error))
+                    .block();
+
+            if (response == null) {
+                throw new RuntimeException("FastAPI 응답이 null입니다.");
+            }
+
+            return response;
+
+        } catch (WebClientResponseException e) {
+            log.error("FastAPI WebClient 응답 오류: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("FastAPI 호출 실패: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("FastAPI 클라이언트 오류: ", e);
+            throw new RuntimeException("면접 처리 서비스 호출에 실패했습니다: " + e.getMessage());
+        }
+    }
+
     // 헬스체크 메서드
     public boolean isHealthy() {
         try {
             String response = webClient.get()
-                    .uri("/health")
+                    .uri("/ai/health2")  // health2로 변경
                     .retrieve()
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(10))
@@ -106,7 +158,7 @@ public class FastApiClient {
         }
     }
 
-    // FastAPI 요청 DTO
+    // ===== 기존 키워드 생성용 DTO =====
     @Data
     @Builder
     @NoArgsConstructor
@@ -119,7 +171,6 @@ public class FastApiClient {
         private String keywordDetail;
     }
 
-    // FastAPI 응답 DTO
     @Data
     @Builder
     @NoArgsConstructor
@@ -134,5 +185,63 @@ public class FastApiClient {
 
         @JsonProperty("error_detail")
         private String errorDetail;
+    }
+
+    // ===== 🆕 새로 추가: Full Pipeline용 DTO =====
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FastApiPipelineResponse {
+        private boolean success;
+        private String message;
+
+        @JsonProperty("session_id")
+        private Integer sessionId;
+
+        @JsonProperty("raw_stt_s3_path")
+        private String rawSttS3Path;
+
+        @JsonProperty("job_role_name")
+        private String jobRoleName;
+
+        @JsonProperty("evaluation_results")
+        private List<ApplicantResult> evaluationResults;
+
+        @JsonProperty("total_processed")
+        private Integer totalProcessed;
+
+        @JsonProperty("successful_count")
+        private Integer successfulCount;
+
+        @JsonProperty("failed_count")
+        private Integer failedCount;
+
+        @JsonProperty("total_processing_time")
+        private Double totalProcessingTime;
+
+        @JsonProperty("step_times")
+        private Map<String, Double> stepTimes;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ApplicantResult {
+        @JsonProperty("applicant_id")
+        private String applicantId;
+
+        @JsonProperty("applicant_name")
+        private String applicantName;
+
+        @JsonProperty("qna_s3_path")
+        private String qnaS3Path;
+
+        @JsonProperty("pdf_s3_path")
+        private String pdfS3Path;
+
+        @JsonProperty("evaluation_json")
+        private Map<String, Object> evaluationJson;
     }
 }
