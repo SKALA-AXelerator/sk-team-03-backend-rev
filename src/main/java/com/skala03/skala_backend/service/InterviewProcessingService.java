@@ -113,9 +113,9 @@ public class InterviewProcessingService {
             Map<String, Map<String, String>> evaluationCriteria = new LinkedHashMap<>();
 
             for (Object[] row : criteriaData) {
-                String keywordName = (String) row[0];      // k.keyword_name
-                Integer score = (Integer) row[1];          // kc.keyword_score
-                String guideline = (String) row[2];        // kc.keyword_guideline
+                String keywordName = (String) row[1];      // k.keyword_name
+                Integer score = (Integer) row[2];          // kc.keyword_score
+                String guideline = (String) row[3];        // kc.keyword_guideline
 
                 // 키워드별 Map이 없으면 생성
                 evaluationCriteria.computeIfAbsent(keywordName, k -> new LinkedHashMap<>());
