@@ -26,7 +26,11 @@ public class ApplicantService {
     public ApplicantDto.ListResponse getAllApplicants() {
         List<Applicant> applicants = applicantRepository.findAll();
         List<ApplicantDto.ApplicantInfo> applicantInfos = applicants.stream()
-                .map(a -> new ApplicantDto.ApplicantInfo(a.getApplicantId(), a.getApplicantName()))
+                .map(a -> new ApplicantDto.ApplicantInfo(
+                        a.getApplicantId(),
+                        a.getApplicantName(),
+                        a.getInterviewStatus() != null ? a.getInterviewStatus().toString() : "UNKNOWN"  // 추가
+                ))
                 .collect(Collectors.toList());
         return new ApplicantDto.ListResponse(applicantInfos);
     }
@@ -186,21 +190,29 @@ public class ApplicantService {
         applicantRepository.saveAll(applicants);
     }
 
-    // 세션별 지원자 조회 (추가 메서드)
+    // 세션별 지원자 조회 (수정된 메서드)
     @Transactional(readOnly = true)
     public List<ApplicantDto.ApplicantInfo> getApplicantsBySession(Integer sessionId) {
         List<Applicant> applicants = applicantRepository.findBySessionId(sessionId);
         return applicants.stream()
-                .map(a -> new ApplicantDto.ApplicantInfo(a.getApplicantId(), a.getApplicantName()))
+                .map(a -> new ApplicantDto.ApplicantInfo(
+                        a.getApplicantId(),  // id 필드에 매핑
+                        a.getApplicantName(), // name 필드에 매핑
+                        a.getInterviewStatus() != null ? a.getInterviewStatus().toString() : "UNKNOWN"  // interviewStatus 필드에 매핑
+                ))
                 .collect(Collectors.toList());
     }
 
-    // 직무별 지원자 조회 (추가 메서드)
+    // 직무별 지원자 조회 (수정된 메서드)
     @Transactional(readOnly = true)
     public List<ApplicantDto.ApplicantInfo> getApplicantsByJobRole(String jobRoleId) {
         List<Applicant> applicants = applicantRepository.findByJobRoleId(jobRoleId);
         return applicants.stream()
-                .map(a -> new ApplicantDto.ApplicantInfo(a.getApplicantId(), a.getApplicantName()))
+                .map(a -> new ApplicantDto.ApplicantInfo(
+                        a.getApplicantId(),
+                        a.getApplicantName(),
+                        a.getInterviewStatus() != null ? a.getInterviewStatus().toString() : "UNKNOWN"  // 추가
+                ))
                 .collect(Collectors.toList());
     }
 

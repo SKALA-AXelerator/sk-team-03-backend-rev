@@ -21,6 +21,7 @@ public class ApplicantDto {
     public static class ApplicantInfo {
         private String id;
         private String name;
+        private String interviewStatus;  // 면접 상태
     }
 
     // ===== 지원자별 질문 관련 =====
