@@ -315,24 +315,22 @@ public class InterviewSessionService {
         return finalReviews;
     }
     /**
-     * 단일 지원자 최종 평가 정보 조회
+     * 단일 지원자 최종 평가 정보 조회 (selected=true인 키워드만)
      */
     @Transactional(readOnly = true)
     public Map<String, Object> getFinalReview(String applicantId) {
 
-
         // 1. 지원자 기본 정보 조회 (JobRole과 함께)
         Optional<Applicant> applicantOpt = applicantRepository.findByIdWithJobRole(applicantId);
         if (applicantOpt.isEmpty()) {
-
             throw new RuntimeException("지원자를 찾을 수 없습니다: " + applicantId);
         }
 
         Applicant applicant = applicantOpt.get();
 
-        // 2. 키워드 점수 조회
+        // 2. ✅ selected=true인 키워드 점수만 조회
         List<ApplicantKeywordScore> keywordScores =
-                applicantKeywordScoreRepository.findByApplicantId(applicantId);
+                applicantKeywordScoreRepository.findByApplicantIdWithSelectedKeywords(applicantId);
 
         // 3. 평가 정보 구성
         List<Map<String, Object>> evaluations = new ArrayList<>();
@@ -345,12 +343,10 @@ public class InterviewSessionService {
                 Keyword keyword = keywordOpt.get();
 
                 Map<String, Object> evaluation = new HashMap<>();
-                evaluations.add(evaluation);
                 evaluation.put("keyword", keyword.getKeywordName()); // 키워드명
                 evaluation.put("score", score.getApplicantScore());   // 점수
                 evaluation.put("content", score.getScoreComment());   // 코멘트
-
-
+                evaluations.add(evaluation);
             }
         }
 
@@ -362,8 +358,6 @@ public class InterviewSessionService {
         result.put("evaluations", evaluations);
         result.put("summaryUrl", applicant.getIndividualQnaPath());
         result.put("totalComment", applicant.getTotalComment()); // ✅ totalComment 추가
-
-
         return result;
     }
 
