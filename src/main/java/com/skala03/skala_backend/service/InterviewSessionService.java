@@ -361,7 +361,7 @@ public class InterviewSessionService {
         result.put("jobRoleName", applicant.getJobRole().getJobRoleName());
         result.put("evaluations", evaluations);
         result.put("summaryUrl", applicant.getIndividualQnaPath());
-
+        result.put("totalComment", applicant.getTotalComment()); // ✅ totalComment 추가
 
 
         return result;
