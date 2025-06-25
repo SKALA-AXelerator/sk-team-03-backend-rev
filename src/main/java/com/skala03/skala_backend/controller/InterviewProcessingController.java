@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "면접 처리 API", description = "면접 STT 처리 및 AI 평가")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "*")
 public class InterviewProcessingController {
 
     private final InterviewProcessingService interviewProcessingService;
