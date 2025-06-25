@@ -10,6 +10,9 @@ import com.skala03.skala_backend.repository.ApplicantRepository;
 import com.skala03.skala_backend.repository.InterviewRoomRepository;
 import com.skala03.skala_backend.repository.SessionRepository;
 import com.skala03.skala_backend.repository.UserRepository;
+import com.skala03.skala_backend.entity.RoomParticipant;
+import com.skala03.skala_backend.repository.RoomParticipantRepository;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,7 @@ public class InterviewerService {
     private final ApplicantRepository applicantRepository;
     private final UserRepository userRepository;
     private final InterviewRoomRepository interviewRoomRepository;
+    private final RoomParticipantRepository roomParticipantRepository;
 
     /**
      * 면접관이 참여하는 룸별 정보 조회 (간소화 버전)
@@ -155,5 +159,35 @@ public class InterviewerService {
                 .collect(Collectors.toList());
 
         return responses;
+    }
+
+    /**
+     * ✅ 면접관 상태 변경 (단순 버전) - 이 메서드를 맨 마지막에 추가하세요
+     */
+    @Transactional
+    public String updateInterviewerStatus(String userId, String statusStr) {
+
+        // 1. 유효한 상태값인지 확인
+        RoomParticipant.ParticipantStatus status;
+        try {
+            status = RoomParticipant.ParticipantStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("유효하지 않은 상태값입니다. (OFFLINE, WAITING, IN_PROGRESS만 가능)");
+        }
+
+        // 2. 해당 사용자의 모든 룸 참가 정보 조회 후 상태 변경
+        List<RoomParticipant> participants = roomParticipantRepository.findByUserId(userId);
+
+        if (participants.isEmpty()) {
+            throw new IllegalArgumentException("해당 사용자의 참가 정보를 찾을 수 없습니다.");
+        }
+
+        // 3. 모든 룸에서의 상태 업데이트
+        for (RoomParticipant participant : participants) {
+            participant.updateStatus(status);
+        }
+        roomParticipantRepository.saveAll(participants);
+
+        return "면접관 상태가 " + status.name() + "로 변경되었습니다.";
     }
 }

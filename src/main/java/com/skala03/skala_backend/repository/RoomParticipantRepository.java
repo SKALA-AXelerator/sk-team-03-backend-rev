@@ -30,4 +30,6 @@ public interface RoomParticipantRepository extends JpaRepository<RoomParticipant
 
     @Query("SELECT rp FROM RoomParticipant rp WHERE rp.roomId = :roomId AND rp.participantRole = :role")
     Optional<RoomParticipant> findByRoomIdAndRole(@Param("roomId") String roomId, @Param("role") RoomParticipant.ParticipantRole role);
+
+    List<RoomParticipant> findByUserId(String userId);
 }

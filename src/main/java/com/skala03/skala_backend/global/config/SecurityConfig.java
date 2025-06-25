@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // 인증 불필요한 경로
+                        .requestMatchers("/api/interviewers/status/**").permitAll()  // 이 줄 추가
                         .requestMatchers("/api/transcription/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()  // 변경된 경로
                         .requestMatchers("/api/applicants/**").permitAll()

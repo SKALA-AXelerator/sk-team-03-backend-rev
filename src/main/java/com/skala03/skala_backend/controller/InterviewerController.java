@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.skala03.skala_backend.dto.ParticipantStatusUpdateRequest;
 
 import java.util.List;
 
@@ -32,5 +33,18 @@ public class InterviewerController {
     public ResponseEntity<List<InterviewScheduleResponse>> getRoomSessions(@PathVariable String roomId) {
         List<InterviewScheduleResponse> sessions = interviewerService.getRoomSessions(roomId);
         return ResponseEntity.ok(sessions);
+    }
+
+    /**
+     * ✅ 면접관 상태 변경 (단순 버전) - 이 메서드를 맨 마지막에 추가하세요
+     */
+    @PutMapping("/status/{userId}")
+    @Operation(summary = "면접관 상태 변경", description = "면접관 ID로 상태를 변경합니다. (OFFLINE, WAITING, IN_PROGRESS)")
+    public ResponseEntity<String> updateInterviewerStatus(
+            @PathVariable String userId,
+            @RequestBody ParticipantStatusUpdateRequest request) {
+
+        String message = interviewerService.updateInterviewerStatus(userId, request.getStatus());
+        return ResponseEntity.ok(message);
     }
 }
