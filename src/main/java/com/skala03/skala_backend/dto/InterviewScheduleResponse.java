@@ -1,5 +1,6 @@
 package com.skala03.skala_backend.dto;
 
+import com.skala03.skala_backend.entity.Session;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ public class InterviewScheduleResponse {
     private Integer sessionId;         // ✅ sessionId 추가
     private String interviewRoom;
     private String interviewTime;
+    private Session.SessionStatus sessionStatus;  // ✅ 추가: 세션 상태
     private List<ApplicantDto> applicantList;
 
     @Data

@@ -106,7 +106,7 @@ public class InterviewerService {
     }
 
     /**
-     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (sessionId 포함)
+     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (sessionId + sessionStatus 포함)
      */
     public List<InterviewScheduleResponse> getRoomSessions(String roomId) {
 
@@ -129,7 +129,7 @@ public class InterviewerService {
                         int sessionIdInt = session.getSessionId().intValue();
                         List<Applicant> applicants = applicantRepository.findBySessionId(sessionIdInt);
 
-                        // ✅ 기존 ApplicantDto 사용
+                        // 지원자 DTO 변환
                         List<InterviewScheduleResponse.ApplicantDto> applicantList = applicants.stream()
                                 .map(a -> new InterviewScheduleResponse.ApplicantDto(
                                         a.getApplicantId(),   // id
@@ -142,21 +142,24 @@ public class InterviewerService {
                         // 또는 원하는 포맷으로:
                         // String interviewTime = session.getSessionTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
-                        // ✅ sessionId 포함한 InterviewScheduleResponse 생성
+                        // ✅ sessionId + sessionStatus 포함한 InterviewScheduleResponse 생성
                         return new InterviewScheduleResponse(
-                                session.getSessionId(),  // sessionId 추가
-                                room.getRoomName(),      // interviewRoom
-                                interviewTime,           // interviewTime
-                                applicantList            // applicantList
+                                session.getSessionId(),      // sessionId
+                                room.getRoomName(),          // interviewRoom
+                                interviewTime,               // interviewTime
+                                session.getSessionStatus(),  // ✅ sessionStatus 추가
+                                applicantList                // applicantList
                         );
 
                     } catch (Exception e) {
+
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(InterviewScheduleResponse::getInterviewTime))  // 시간순 정렬
                 .collect(Collectors.toList());
+
 
         return responses;
     }
