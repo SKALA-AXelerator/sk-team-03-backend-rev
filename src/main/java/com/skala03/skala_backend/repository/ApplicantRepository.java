@@ -100,4 +100,13 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     // 세션 존재 여부 확인
     @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM sessions WHERE session_id = :sessionId", nativeQuery = true)
     boolean existsSessionById(@Param("sessionId") Integer sessionId);
+
+    // ZIP 다운로드용 메서드 추가
+    @Query("SELECT a FROM Applicant a WHERE a.jobRole.jobRoleId = :jobRoleId AND a.individualPdfPath IS NOT NULL")
+    List<Applicant> findByJobRoleIdWithPdfPath(@Param("jobRoleId") String jobRoleId);
+
+    @Query("SELECT a FROM Applicant a WHERE a.jobRole.jobRoleId = :jobRoleId AND a.individualQnaPath IS NOT NULL")
+    List<Applicant> findByJobRoleIdWithQnaPath(@Param("jobRoleId") String jobRoleId);
+
+
 }
