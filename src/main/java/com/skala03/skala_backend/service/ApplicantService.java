@@ -4,7 +4,9 @@ import com.skala03.skala_backend.dto.ApplicantDto;
 import com.skala03.skala_backend.entity.Applicant;
 import com.skala03.skala_backend.entity.InterviewStatus;
 import com.skala03.skala_backend.entity.JobRole;
+import com.skala03.skala_backend.entity.Session;  // ✅ 추가
 import com.skala03.skala_backend.repository.ApplicantRepository;
+import com.skala03.skala_backend.repository.SessionRepository;  // ✅ 추가
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ public class ApplicantService {
     @Autowired
     private ApplicantRepository applicantRepository;
 
+    @Autowired
+    private SessionRepository sessionRepository;  // ✅ 추가
 
     // 전체 지원자 리스트 조회
     @Transactional(readOnly = true)
@@ -66,6 +70,7 @@ public class ApplicantService {
 
         return new ApplicantDto.QuestionsResponse(jobRoleInfo, questionList);
     }
+
     // 지원자 평가 (AI 분석) - DB 데이터 사용 버전 (직무 정보 포함)
     public List<ApplicantDto.EvaluationResponse> evaluateApplicants(ApplicantDto.EvaluationRequest request) {
         List<String> applicantIds = request.getApplicantIds();
@@ -121,7 +126,6 @@ public class ApplicantService {
                 })
                 .collect(Collectors.toList());
     }
-
 
     // 면접 종료 후 모든 면접자 완료 상태로 변경
     public void updateToInterviewComplete(ApplicantDto.StatusUpdateRequest request) {
@@ -274,7 +278,8 @@ public class ApplicantService {
                 message
         );
     }
-    // 세션 재편성
+
+    // ✅ 세션 재편성 (기존 세션 정보 완전히 복사 + 빈 세션 자동 삭제)
     @Transactional
     public ApplicantDto.SessionReorganizeResponse reorganizeSessions(
             ApplicantDto.SessionReorganizeRequest request) {
@@ -282,65 +287,92 @@ public class ApplicantService {
         List<String> selectedApplicantIds = request.getSelectedApplicantIds();
         String roomId = request.getRoomId();
 
-        // ✅ 새로 추가: roomId로 면접관들 조회
+        // 기본 검증
         if (roomId == null || roomId.isEmpty()) {
             throw new RuntimeException("Room ID is required");
         }
 
-        List<String> roomInterviewers = applicantRepository.findUserIdsByRoomId(roomId);
-        if (roomInterviewers.isEmpty()) {
-            throw new RuntimeException("No interviewers found for room: " + roomId);
-        }
-
         // 1. 선택된 지원자들의 기존 세션 정보 조회
         List<Applicant> selectedApplicants = applicantRepository.findByApplicantIdIn(selectedApplicantIds);
+        if (selectedApplicants.isEmpty()) {
+            throw new RuntimeException("Selected applicants not found");
+        }
+
         Map<Integer, List<Applicant>> sessionGroups = selectedApplicants.stream()
                 .collect(Collectors.groupingBy(Applicant::getSessionId));
 
-        // 2. 새 세션 ID 생성
-        Integer newSessionId = applicantRepository.findMaxSessionId() + 1;
+        // 2. ✅ 기존 세션 정보 조회 (첫 번째 지원자의 세션 정보 사용)
+        Integer originalSessionId = selectedApplicants.get(0).getSessionId();
+        Session originalSession = sessionRepository.findById(originalSessionId)
+                .orElseThrow(() -> new RuntimeException("Original session not found: " + originalSessionId));
 
-        // 3. 새 세션 생성
-        String sessionName = "재편성된 세션 " + newSessionId;
+        // 3. 새 세션 ID 생성
+        Integer newSessionId = applicantRepository.findMaxSessionIdFromSessions() + 1;
+
+        // 4. ✅ 기존 세션 정보를 완전히 복사하여 새 세션 생성 (session_id와 applicants_user_id만 다름)
         String applicantIdsStr = String.join(",", selectedApplicantIds);
-        String interviewerIdsStr = String.join(",", roomInterviewers); // ✅ 자동 조회된 면접관들 사용
-        String rawDataPath = "/raw/data/session" + newSessionId + ".json";
 
-        applicantRepository.createNewSession(newSessionId, roomId, sessionName, interviewerIdsStr, applicantIdsStr, rawDataPath);
+        applicantRepository.createNewSessionFromExisting(
+                newSessionId,
+                applicantIdsStr,
+                originalSessionId
+        );
 
-        // 4. 선택된 지원자들을 새 세션으로 이동
+        // 5. 선택된 지원자들을 새 세션으로 이동
         selectedApplicants.forEach(applicant -> {
             applicant.setSessionId(newSessionId);
-            applicant.setInterviewStatus(InterviewStatus.WAITING); // 상태 초기화
+            applicant.setInterviewStatus(InterviewStatus.WAITING);
             applicant.setStartedAt(null);
             applicant.setCompletedAt(null);
         });
         applicantRepository.saveAll(selectedApplicants);
 
         List<ApplicantDto.SessionUpdateInfo> updatedSessions = new ArrayList<>();
+        List<Integer> deletedSessionIds = new ArrayList<>();
 
-        // 5. 기존 세션들 재구성
-        for (Integer originalSessionId : sessionGroups.keySet()) {
+        // 6. 기존 세션들의 applicants_user_id 업데이트
+        for (Integer sessionId : sessionGroups.keySet()) {
             // 해당 세션의 남은 지원자들 조회
             List<Applicant> remainingApplicants = applicantRepository
-                    .findBySessionIdAndApplicantIdNotIn(originalSessionId, selectedApplicantIds);
+                    .findBySessionIdAndApplicantIdNotIn(sessionId, selectedApplicantIds);
 
-            // 남은 지원자들의 ID만 추출
             List<String> remainingApplicantIds = remainingApplicants.stream()
                     .map(Applicant::getApplicantId)
                     .collect(Collectors.toList());
 
-            updatedSessions.add(new ApplicantDto.SessionUpdateInfo(
-                    originalSessionId,
-                    remainingApplicantIds
-            ));
+            if (remainingApplicantIds.isEmpty()) {
+                // 빈 세션 삭제
+                applicantRepository.deleteSessionById(sessionId);
+                deletedSessionIds.add(sessionId);
+
+                updatedSessions.add(new ApplicantDto.SessionUpdateInfo(
+                        sessionId,
+                        remainingApplicantIds,
+                        "deleted"
+                ));
+            } else {
+                // sessions 테이블의 applicants_user_id 업데이트
+                String updatedApplicantIds = String.join(",", remainingApplicantIds);
+                applicantRepository.updateSessionApplicants(sessionId, updatedApplicantIds);
+
+                updatedSessions.add(new ApplicantDto.SessionUpdateInfo(
+                        sessionId,
+                        remainingApplicantIds,
+                        "updated"
+                ));
+            }
         }
+
+        String message = String.format(
+                "Sessions reorganized successfully. New session %d created with %d applicants. %d empty sessions deleted. All session info copied from session %d.",
+                newSessionId, selectedApplicantIds.size(), deletedSessionIds.size(), originalSessionId
+        );
 
         return new ApplicantDto.SessionReorganizeResponse(
                 newSessionId,
                 selectedApplicantIds,
                 updatedSessions,
-                "Sessions reorganized successfully"
+                message
         );
     }
 }

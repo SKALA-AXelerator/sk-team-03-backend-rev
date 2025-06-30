@@ -146,6 +146,6 @@ public class ApplicantDto {
     public static class SessionUpdateInfo {
         private Integer sessionId;
         private List<String> remainingApplicants;
-//        private String action; // "updated" or "deleted"
+        private String action; // "updated" or "deleted" - 세션 상태 구분
     }
 }
