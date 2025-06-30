@@ -22,6 +22,7 @@ public class AdminResultDto {
     private Float totalScore;
     private List<KeywordScoreDto> applicantKeywordScores;
     private String individualPdfPath;
+    private String individualQnaPath;
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

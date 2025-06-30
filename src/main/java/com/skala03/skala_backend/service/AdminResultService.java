@@ -50,6 +50,7 @@ public class AdminResultService {
         dto.setApplicantId(applicant.getApplicantId());
         dto.setApplicantName(applicant.getApplicantName());
         dto.setIndividualPdfPath(applicant.getIndividualPdfPath());
+        dto.setIndividualQnaPath(applicant.getIndividualQnaPath());
         dto.setJobRoleName(applicant.getJobRole().getJobRoleName());
         dto.setInterviewStatus(applicant.getInterviewStatus().toString());
         dto.setTotalScore(applicant.getTotalScore());
