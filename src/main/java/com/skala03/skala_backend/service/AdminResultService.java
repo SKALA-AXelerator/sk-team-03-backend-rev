@@ -1,13 +1,14 @@
-// AdminResultService.java
 package com.skala03.skala_backend.service;
 
 import com.skala03.skala_backend.dto.AdminResultDto;
 import com.skala03.skala_backend.dto.AdminResultDto.KeywordScoreDto;
 import com.skala03.skala_backend.entity.Applicant;
 import com.skala03.skala_backend.entity.ApplicantKeywordScore;
+import com.skala03.skala_backend.entity.JobRoleKeyword; // ✅ 추가
 import com.skala03.skala_backend.entity.Keyword;
 import com.skala03.skala_backend.entity.Session;
 import com.skala03.skala_backend.entity.User;
+import com.skala03.skala_backend.repository.AdminRepository; // ✅ 추가
 import com.skala03.skala_backend.repository.AdminResultRepository;
 import com.skala03.skala_backend.repository.ApplicantKeywordScoreRepository;
 import com.skala03.skala_backend.repository.KeywordRepository;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,17 +35,19 @@ public class AdminResultService {
     private final SessionRepository sessionRepository;
     private final ApplicantKeywordScoreRepository keywordScoreRepository;
     private final KeywordRepository keywordRepository;
-    private final UserRepository userRepository; // ✅ UserRepository 추가
+    private final UserRepository userRepository;
+    private final AdminRepository adminRepository; // ✅ AdminRepository 추가
 
     public List<AdminResultDto> getJobRoleResults(String jobRoleId) {
         List<Applicant> applicants = adminResultRepository.findApplicantsByJobRoleId(jobRoleId);
 
         return applicants.stream()
-                .map(this::convertToDto)
+                .map(applicant -> convertToDto(applicant, jobRoleId)) // ✅ jobRoleId 전달
                 .collect(Collectors.toList());
     }
 
-    private AdminResultDto convertToDto(Applicant applicant) {
+    // ✅ jobRoleId 파라미터 추가
+    private AdminResultDto convertToDto(Applicant applicant, String jobRoleId) {
         AdminResultDto dto = new AdminResultDto();
 
         // 기본 지원자 정보
@@ -58,8 +62,8 @@ public class AdminResultService {
         // 세션 정보 매핑
         setSessionInfo(dto, applicant);
 
-        // 키워드 점수 매핑
-        setKeywordScores(dto, applicant);
+        // ✅ 선택된 키워드만 필터링하여 키워드 점수 매핑
+        setSelectedKeywordScores(dto, applicant, jobRoleId);
 
         return dto;
     }
@@ -70,7 +74,7 @@ public class AdminResultService {
             if (sessionOpt.isPresent()) {
                 Session session = sessionOpt.get();
 
-                // ✅ 면접관 아이디들을 이름으로 변환
+                // 면접관 아이디들을 이름으로 변환
                 String interviewerNames = convertInterviewerIdsToNames(session.getInterviewersUserId());
                 dto.setInterviewer(interviewerNames);
 
@@ -82,7 +86,7 @@ public class AdminResultService {
     }
 
     /**
-     * ✅ 면접관 아이디 문자열을 면접관 이름 문자열로 변환
+     * 면접관 아이디 문자열을 면접관 이름 문자열로 변환
      * 예: "sk-01,sk-02,sk-03" → "김철수, 박영희, 이민수"
      */
     private String convertInterviewerIdsToNames(String interviewerIds) {
@@ -96,7 +100,7 @@ public class AdminResultService {
                 .filter(id -> !id.isEmpty())
                 .collect(Collectors.toList());
 
-        // 각 아이디로 사용자 이름 조회 (성능 최적화를 위해 배치 조회도 가능)
+        // 각 아이디로 사용자 이름 조회
         List<String> nameList = idList.stream()
                 .map(id -> userRepository.findById(id)
                         .map(User::getUserName)
@@ -106,21 +110,49 @@ public class AdminResultService {
         return String.join(", ", nameList);
     }
 
-    private void setKeywordScores(AdminResultDto dto, Applicant applicant) {
-        List<ApplicantKeywordScore> keywordScores =
+    /**
+     * ✅ 선택된 키워드만 필터링하여 키워드 점수 설정
+     */
+    private void setSelectedKeywordScores(AdminResultDto dto, Applicant applicant, String jobRoleId) {
+        // 1. 해당 직무에서 선택된 키워드 ID 목록 조회
+        List<JobRoleKeyword> jobRoleKeywords = adminRepository.findJobRoleKeywordsByJobRoleId(jobRoleId);
+
+        Set<Integer> selectedKeywordIds = jobRoleKeywords.stream()
+                .filter(jrk -> jrk.getSelected() != null && jrk.getSelected()) // selected가 true인 것만
+                .map(JobRoleKeyword::getKeywordId)
+                .collect(Collectors.toSet());
+
+        // 선택된 키워드가 없는 경우 빈 리스트 반환
+        if (selectedKeywordIds.isEmpty()) {
+            dto.setApplicantKeywordScores(List.of());
+            return;
+        }
+
+        // 2. 지원자의 모든 키워드 점수 조회
+        List<ApplicantKeywordScore> allKeywordScores =
                 keywordScoreRepository.findByApplicantId(applicant.getApplicantId());
 
-        // 키워드 ID 목록 추출
-        List<Integer> keywordIds = keywordScores.stream()
+        // 3. 선택된 키워드에 해당하는 점수만 필터링
+        List<ApplicantKeywordScore> selectedKeywordScores = allKeywordScores.stream()
+                .filter(score -> selectedKeywordIds.contains(score.getKeywordId()))
+                .collect(Collectors.toList());
+
+        // 4. 키워드 정보 배치 조회 (성능 최적화)
+        List<Integer> keywordIds = selectedKeywordScores.stream()
                 .map(ApplicantKeywordScore::getKeywordId)
                 .collect(Collectors.toList());
 
-        // 키워드 정보 배치 조회 (성능 최적화)
+        if (keywordIds.isEmpty()) {
+            dto.setApplicantKeywordScores(List.of());
+            return;
+        }
+
         Map<Integer, String> keywordMap = keywordRepository.findAllById(keywordIds)
                 .stream()
                 .collect(Collectors.toMap(Keyword::getKeywordId, Keyword::getKeywordName));
 
-        List<KeywordScoreDto> keywordScoreDtos = keywordScores.stream()
+        // 5. DTO 변환
+        List<KeywordScoreDto> keywordScoreDtos = selectedKeywordScores.stream()
                 .map(score -> new KeywordScoreDto(
                         score.getKeywordId().toString(),
                         keywordMap.getOrDefault(score.getKeywordId(), "Unknown"),
@@ -131,4 +163,5 @@ public class AdminResultService {
 
         dto.setApplicantKeywordScores(keywordScoreDtos);
     }
+
 }
