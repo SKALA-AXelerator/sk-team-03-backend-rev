@@ -1,30 +1,47 @@
+// TranscriptionResult.java - Vito API 응답 구조
 package com.skala03.skala_backend.dto;
 
-
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)  // ⭐️
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TranscriptionResult {
+
+    @JsonProperty("id")
     private String id;
+
+    @JsonProperty("status")
     private String status;
-    private Results results;
+
+    @JsonProperty("results")
+    private TranscriptionResults results;
 
     @Data
-    public static class Results {
-        private List<Utterance> utterances = new ArrayList<>();
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class TranscriptionResults {
+        @JsonProperty("utterances")
+        private List<Utterance> utterances;
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Utterance {
+        @JsonProperty("spk")
+        private Integer spk;
 
+        @JsonProperty("msg")
         private String msg;
-        private int spk;
 
+        @JsonProperty("start_at")
+        private Long startAt;
+
+        @JsonProperty("duration")
+        private Long duration;
+
+        @JsonProperty("lang")
+        private String lang;
     }
 }
