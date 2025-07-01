@@ -5,24 +5,8 @@ metadata:
   namespace: sk-team-03
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "6000"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "6000"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "6000"
-
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"              # 무제한
-    nginx.ingress.kubernetes.io/client-max-body-size: "0"        # 무제한
-
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
-    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
-    nginx.ingress.kubernetes.io/proxy-max-temp-file-size: "2048m" # 2GB 임시 파일
-
-    nginx.ingress.kubernetes.io/limit-rps: "100"                   # 요청 속도 제한 해제
-                  
-
-    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "32"
-    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "180"
   labels:
     app: sk-team-03-frontend
 spec:
