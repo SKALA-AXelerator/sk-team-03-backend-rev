@@ -26,10 +26,10 @@ public class WebClientConfig {
         // :wrench: HTTP 클라이언트 설정
         HttpClient httpClient = HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15_000) // 15초 연결 타임아웃
-                .responseTimeout(Duration.ofMinutes(10)) // 10분 응답 타임아웃 (음성 처리용)
+                .responseTimeout(Duration.ofMinutes(60)) // 10분 응답 타임아웃 (음성 처리용)
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(10, TimeUnit.MINUTES))
-                                .addHandlerLast(new WriteTimeoutHandler(10, TimeUnit.MINUTES))
+                        conn.addHandlerLast(new ReadTimeoutHandler(60, TimeUnit.MINUTES))
+                                .addHandlerLast(new WriteTimeoutHandler(60, TimeUnit.MINUTES))
                 );
 
         return WebClient.builder()

@@ -48,16 +48,16 @@ public class Applicant {
     @Column(name = "total_score")
     private Float totalScore;
 
-    @Column(name = "individual_pdf_path")
+    @Column(name = "individual_pdf_path",columnDefinition = "TEXT")
     private String individualPdfPath;
 
-    @Column(name = "individual_qna_path")
+    @Column(name = "individual_qna_path",columnDefinition = "TEXT")
     private String individualQnaPath;
 
-    @Column(name = "total_comment")
+    @Column(name = "total_comment",columnDefinition = "TEXT")
     private String totalComment;
 
-    @Column(name = "next_checkpoint")
+    @Column(name = "next_checkpoint",columnDefinition = "TEXT")
     private String nextCheckpoint;
 
     @OneToMany(mappedBy = "applicant", cascade = CascadeType.ALL, orphanRemoval = true)
