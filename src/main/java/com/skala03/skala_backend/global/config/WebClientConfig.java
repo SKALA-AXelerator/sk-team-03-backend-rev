@@ -29,7 +29,7 @@ public class WebClientConfig {
                 .responseTimeout(Duration.ofMinutes(10)) // 10분 응답 타임아웃 (음성 처리용)
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(10, TimeUnit.MINUTES))
-                                .addHandlerLast(new WriteTimeoutHandler(2, TimeUnit.MINUTES))
+                                .addHandlerLast(new WriteTimeoutHandler(10, TimeUnit.MINUTES))
                 );
 
         return WebClient.builder()
