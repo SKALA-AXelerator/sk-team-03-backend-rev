@@ -43,7 +43,7 @@ public class TranscriptionController {
         // 2. 인증 토큰 획득 → 전사 처리 → 결과 응답
         return vitoAuthService.getAccessToken()
                 .flatMap(jwtToken -> transcriptionService.transcribeAndPollResult(audioFile, jwtToken, speakerCount))
-                .timeout(Duration.ofMinutes(3))
+                .timeout(Duration.ofMinutes(10))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
     }
