@@ -16,11 +16,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: sk-team-03-backend    # ✅ metadata와 일치
+      app: backend
   template:
     metadata:
       labels:
-        app: sk-team-03-backend  # ✅ metadata와 일치
+        app: backend
         version: v1
     spec:
       serviceAccountName: sk-team-03-sa
