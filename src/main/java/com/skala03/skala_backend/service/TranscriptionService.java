@@ -73,8 +73,8 @@ public class TranscriptionService {
 
     private Mono<TranscriptionResult> pollUntilComplete(String transcribeId, String jwtToken, int maxRetries) {
         return Mono.defer(() -> getTranscribeResult(transcribeId, jwtToken))
-                .repeatWhenEmpty(repeat -> repeat.delayElements(Duration.ofSeconds(5)).take(maxRetries))
-                .timeout(Duration.ofMinutes(5));
+                .repeatWhenEmpty(repeat -> repeat.delayElements(Duration.ofSeconds(10)).take(300))
+                .timeout(Duration.ofMinutes(60));
     }
 
     public Mono<TranscriptionResult> getTranscribeResult(String transcribeId, String jwtToken) {

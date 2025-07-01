@@ -16,11 +16,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: backend
+      app: sk-team-03-backend    # ✅ metadata와 일치
   template:
     metadata:
       labels:
-        app: backend
+        app: sk-team-03-backend  # ✅ metadata와 일치
         version: v1
     spec:
       serviceAccountName: sk-team-03-sa
@@ -61,13 +61,43 @@ spec:
                 configMapKeyRef:
                   name: backend-config
                   key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+            - name: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+            - name: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+            - name: SPRING_SERVLET_MULTIPART_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SPRING_SERVLET_MULTIPART_ENABLED
+            - name: SERVER_TOMCAT_MAX_HTTP_POST_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SERVER_TOMCAT_MAX_HTTP_POST_SIZE
+            - name: SERVER_TOMCAT_CONNECTION_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SERVER_TOMCAT_CONNECTION_TIMEOUT
+            - name: SERVER_SERVLET_ASYNC_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: SERVER_SERVLET_ASYNC_TIMEOUT
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "256Mi"      # 기존 256Mi에서 증가
+              cpu: "250m"          # 기존 250m에서 증가
             limits:
-              memory: "2Gi"
-              cpu: "1000m"
+              memory: "2Gi"        # 기존 2Gi에서 증가
+              cpu: "1000m"         # 기존 1000m에서 증가
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -79,8 +109,15 @@ spec:
               mountPath: /tmp
             - name: cache
               mountPath: /app/cache
+            - name: upload-temp    # 🆕 추가
+              mountPath: /app/upload-temp
       volumes:
         - name: tmp
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 1Gi       # 🆕 크기 제한 추가
         - name: cache
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 1Gi       # 🆕 크기 제한 추가
+        - name: upload-temp      # 🆕 새 볼륨
+          emptyDir:
+            sizeLimit: 5Gi
