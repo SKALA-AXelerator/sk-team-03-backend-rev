@@ -73,7 +73,7 @@ public class InterviewerService {
                             .collect(Collectors.toList());
                 }
 
-                // ✅ 기존 메서드 사용하여 통계 계산
+                //  기존 메서드 사용하여 통계 계산
                 int totalCount = 0;
                 int remainingCount = 0;
 
@@ -106,7 +106,7 @@ public class InterviewerService {
     }
 
     /**
-     * ✅ 룸 ID로 해당 룸의 모든 세션 조회 (sessionId + sessionStatus 포함)
+     *  룸 ID로 해당 룸의 모든 세션 조회 (sessionId + sessionStatus 포함)
      */
     public List<InterviewScheduleResponse> getRoomSessions(String roomId) {
 
@@ -142,12 +142,12 @@ public class InterviewerService {
                         // 또는 원하는 포맷으로:
                         // String interviewTime = session.getSessionTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
-                        // ✅ sessionId + sessionStatus 포함한 InterviewScheduleResponse 생성
+                        //  sessionId + sessionStatus 포함한 InterviewScheduleResponse 생성
                         return new InterviewScheduleResponse(
                                 session.getSessionId(),      // sessionId
                                 room.getRoomName(),          // interviewRoom
                                 interviewTime,               // interviewTime
-                                session.getSessionStatus(),  // ✅ sessionStatus 추가
+                                session.getSessionStatus(),  // sessionStatus 추가
                                 applicantList                // applicantList
                         );
 
@@ -165,7 +165,7 @@ public class InterviewerService {
     }
 
     /**
-     * ✅ 면접관 상태 변경 (단순 버전) - 이 메서드를 맨 마지막에 추가하세요
+     *  면접관 상태 변경 (단순 버전) - 이 메서드를 맨 마지막에 추가하세요
      */
     @Transactional
     public String updateInterviewerStatus(String userId, String statusStr) {

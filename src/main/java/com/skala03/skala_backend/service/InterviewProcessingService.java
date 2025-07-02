@@ -28,13 +28,13 @@ public class InterviewProcessingService {
 
     /**
      * 프론트엔드 요청을 처리하여 FastAPI 호출 후 DB 저장
-     * 🔥 트랜잭션 제거 - 비동기 실행에서는 개별 메서드에서 트랜잭션 관리
+     *  트랜잭션 제거 - 비동기 실행에서는 개별 메서드에서 트랜잭션 관리
      */
     public InterviewProcessingDto.ProcessingResponse processFullPipeline(
             InterviewProcessingDto.ProcessingRequest request) {
 
         try {
-            log.info("🚀 면접 처리 시작: sessionId={}, jobRoleName={}, 지원자수={}",
+            log.info(" 면접 처리 시작: sessionId={}, jobRoleName={}, 지원자수={}",
                     request.getSessionId(), request.getJobRoleName(), request.getApplicantIds().size());
 
             // 1. 직무명으로 DB에서 평가기준 조회 (읽기 전용 트랜잭션)
@@ -44,7 +44,7 @@ public class InterviewProcessingService {
                 throw new RuntimeException("직무 '" + request.getJobRoleName() + "'에 대한 평가기준을 찾을 수 없습니다.");
             }
 
-            log.info("✅ 평가기준 조회 완료: {}개 키워드", evaluationCriteria.size());
+            log.info(" 평가기준 조회 완료: {}개 키워드", evaluationCriteria.size());
 
             // 2. FastAPI 요청 데이터 구성
             InterviewProcessingDto.FastApiRequest fastApiRequest = InterviewProcessingDto.FastApiRequest.builder()
@@ -57,14 +57,14 @@ public class InterviewProcessingService {
                     .build();
 
             // 3. FastAPI 호출 (트랜잭션 외부에서 실행)
-            log.info("📡 FastAPI 호출 시작: sessionId={}", request.getSessionId());
+            log.info(" FastAPI 호출 시작: sessionId={}", request.getSessionId());
             FastApiClient.FastApiPipelineResponse response = fastApiClient.callFullPipeline(fastApiRequest);
 
             if (!response.isSuccess()) {
                 throw new RuntimeException("FastAPI 처리 실패: " + response.getMessage());
             }
 
-            log.info("✅ FastAPI 처리 완료: 성공 {}명, 실패 {}명",
+            log.info(" FastAPI 처리 완료: 성공 {}명, 실패 {}명",
                     response.getSuccessfulCount(), response.getFailedCount());
 
             // 4. 응답 데이터를 DB에 저장 (개별 트랜잭션으로 처리)
@@ -83,7 +83,7 @@ public class InterviewProcessingService {
                     .build();
 
         } catch (Exception e) {
-            log.error("❌ 면접 처리 실패: sessionId={}, error={}", request.getSessionId(), e.getMessage(), e);
+            log.error(" 면접 처리 실패: sessionId={}, error={}", request.getSessionId(), e.getMessage(), e);
 
             return InterviewProcessingDto.ProcessingResponse.builder()
                     .success(false)
@@ -103,12 +103,12 @@ public class InterviewProcessingService {
     @Transactional(readOnly = true)
     public Map<String, Map<String, String>> getEvaluationCriteriaByJobRole(String jobRoleName) {
         try {
-            log.info("🔍 평가기준 조회 시작: jobRoleName={}", jobRoleName);
+            log.info(" 평가기준 조회 시작: jobRoleName={}", jobRoleName);
 
             List<Object[]> criteriaData = adminRepository.findEvaluationCriteriaByJobRoleName(jobRoleName);
 
             if (criteriaData.isEmpty()) {
-                log.warn("⚠️ 평가기준이 없습니다: jobRoleName={}", jobRoleName);
+                log.warn(" 평가기준이 없습니다: jobRoleName={}", jobRoleName);
                 return Collections.emptyMap();
             }
 
@@ -138,7 +138,7 @@ public class InterviewProcessingService {
      * FastAPI 응답을 데이터베이스에 저장 (각각 독립적인 트랜잭션)
      */
     private ProcessingResult saveProcessingResults(FastApiClient.FastApiPipelineResponse response) {
-        log.info("💾 DB 저장 시작: sessionId={}", response.getSessionId());
+        log.info(" DB 저장 시작: sessionId={}", response.getSessionId());
 
         ProcessingResult result = new ProcessingResult();
 
@@ -185,7 +185,7 @@ public class InterviewProcessingService {
             session.setRawDataPath(response.getRawSttS3Path());
             sessionRepository.save(session);
 
-            log.debug("📝 세션 저장 완료: sessionId={}, status={}",
+            log.debug(" 세션 저장 완료: sessionId={}, status={}",
                     response.getSessionId(), session.getSessionStatus());
         } else {
             throw new RuntimeException("세션을 찾을 수 없습니다: " + response.getSessionId());
@@ -215,11 +215,11 @@ public class InterviewProcessingService {
         updateApplicantEvaluationData(applicant, result.getEvaluationJson());
 
         applicantRepository.save(applicant);
-        log.debug("📝 지원자 기본 정보 저장: applicantId={}", result.getApplicantId());
+        log.debug(" 지원자 기본 정보 저장: applicantId={}", result.getApplicantId());
 
         // 2. 키워드별 점수 저장
         saveKeywordScores(result);
-        log.debug("📝 키워드 점수 저장 완료: applicantId={}", result.getApplicantId());
+        log.debug(" 키워드 점수 저장 완료: applicantId={}", result.getApplicantId());
     }
 
     /**
@@ -227,7 +227,7 @@ public class InterviewProcessingService {
      */
     private void updateApplicantEvaluationData(Applicant applicant, Map<String, Object> evaluationJson) {
         if (evaluationJson == null || evaluationJson.containsKey("error")) {
-            log.warn("⚠️ 평가 데이터가 없거나 오류 포함: applicantId={}", applicant.getApplicantId());
+            log.warn(" 평가 데이터가 없거나 오류 포함: applicantId={}", applicant.getApplicantId());
             return;
         }
 
@@ -239,7 +239,7 @@ public class InterviewProcessingService {
                 Object totalScore = summary.get("total_score");
                 if (totalScore instanceof Number) {
                     applicant.setTotalScore(((Number) totalScore).floatValue());
-                    log.debug("📊 총점 저장: applicantId={}, score={}",
+                    log.debug(" 총점 저장: applicantId={}, score={}",
                             applicant.getApplicantId(), applicant.getTotalScore());
                 }
             }
@@ -293,7 +293,7 @@ public class InterviewProcessingService {
                 // 키워드 엔티티 조회 (개별 조회 - 호환성 보장)
                 Optional<Keyword> keywordOpt = keywordRepository.findByKeywordName(keywordName);
                 if (keywordOpt.isEmpty()) {
-                    log.warn("⚠️ 키워드를 찾을 수 없습니다: {}", keywordName);
+                    log.warn(" 키워드를 찾을 수 없습니다: {}", keywordName);
                     continue;
                 }
 
@@ -310,17 +310,17 @@ public class InterviewProcessingService {
 
                     keywordScores.add(score);
 
-                    log.debug("📊 키워드 점수 준비: {} - {}점", keywordName, score.getApplicantScore());
+                    log.debug(" 키워드 점수 준비: {} - {}점", keywordName, score.getApplicantScore());
                 }
             }
 
             // 일괄 저장
             if (!keywordScores.isEmpty()) {
                 applicantKeywordScoreRepository.saveAll(keywordScores);
-                log.debug("📊 키워드 점수 일괄 저장: applicantId={}, count={}",
+                log.debug(" 키워드 점수 일괄 저장: applicantId={}, count={}",
                         result.getApplicantId(), keywordScores.size());
             } else {
-                log.warn("⚠️ 저장할 키워드 점수가 없습니다: applicantId={}", result.getApplicantId());
+                log.warn(" 저장할 키워드 점수가 없습니다: applicantId={}", result.getApplicantId());
             }
 
         } catch (Exception e) {

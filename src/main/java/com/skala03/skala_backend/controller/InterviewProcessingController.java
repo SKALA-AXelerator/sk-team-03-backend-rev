@@ -29,7 +29,7 @@ public class InterviewProcessingController {
             @RequestBody InterviewProcessingDto.ProcessingRequest request) {
 
         try {
-            log.info("📋 면접 처리 요청: sessionId={}, jobRoleName={}, 지원자수={}",
+            log.info(" 면접 처리 요청: sessionId={}, jobRoleName={}, 지원자수={}",
                     request.getSessionId(), request.getJobRoleName(),
                     request.getApplicantIds() != null ? request.getApplicantIds().size() : 0);
 
@@ -39,7 +39,7 @@ public class InterviewProcessingController {
             // 고유한 작업 ID 생성
             String jobId = UUID.randomUUID().toString();
 
-            // 🚀 비동기로 처리 시작 (즉시 반환)
+            //  비동기로 처리 시작 (즉시 반환)
             CompletableFuture.runAsync(() -> {
                 try {
                     log.info("🔄 백그라운드 처리 시작: jobId={}, sessionId={}", jobId, request.getSessionId());
