@@ -133,8 +133,8 @@ public class TranscriptionService {
             throw new IOException("업로드된 파일이 비어있습니다.");
         }
 
-        if (file.getSize() > 100 * 1024 * 1024) { // 100MB 제한
-            throw new IOException("파일 크기가 100MB를 초과합니다.");
+        if (file.getSize() > 500 * 1024 * 1024) { // 500MB 제한
+            throw new IOException("파일 크기가 500MB를 초과합니다.");
         }
     }
 
@@ -247,8 +247,8 @@ public class TranscriptionService {
 
         log.info("Vito 폴링 시작 - vitoId: {}", vitoTranscriptionId);
 
-        // 최대 50분 대기 (10초 * 300회)
-        for (int i = 0; i < 300; i++) {
+        //  대기 (10초 * 200회)
+        for (int i = 0; i < 200; i++) {
             try {
                 log.debug("Vito 폴링 시도 {}/300 - vitoId: {}", i + 1, vitoTranscriptionId);
 
