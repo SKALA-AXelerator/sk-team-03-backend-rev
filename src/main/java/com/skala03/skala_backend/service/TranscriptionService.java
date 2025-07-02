@@ -250,7 +250,7 @@ public class TranscriptionService {
         //  대기 (10초 * 200회)
         for (int i = 0; i < 200; i++) {
             try {
-                log.debug("Vito 폴링 시도 {}/300 - vitoId: {}", i + 1, vitoTranscriptionId);
+                log.debug("Vito 폴링 시도 {}/200 - vitoId: {}", i + 1, vitoTranscriptionId);
 
                 ResponseEntity<TranscriptionResult> response = restTemplate.exchange(
                         baseUrl + "/v1/transcribe/" + vitoTranscriptionId,
@@ -273,9 +273,9 @@ public class TranscriptionService {
                 Thread.sleep(10000);
 
             } catch (Exception e) {
-                log.error("Vito 폴링 중 오류 - 시도 {}/300, vitoId: {}, 오류: {}",
+                log.error("Vito 폴링 중 오류 - 시도 {}/200, vitoId: {}, 오류: {}",
                         i + 1, vitoTranscriptionId, e.getMessage());
-                if (i == 299) { // 마지막 시도
+                if (i == 199) { // 마지막 시도
                     throw new RuntimeException("전사 결과 조회 실패: " + e.getMessage(), e);
                 }
             }
