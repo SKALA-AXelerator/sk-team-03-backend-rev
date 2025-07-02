@@ -4,11 +4,11 @@ import com.skala03.skala_backend.dto.AdminResultDto;
 import com.skala03.skala_backend.dto.AdminResultDto.KeywordScoreDto;
 import com.skala03.skala_backend.entity.Applicant;
 import com.skala03.skala_backend.entity.ApplicantKeywordScore;
-import com.skala03.skala_backend.entity.JobRoleKeyword; // ✅ 추가
+import com.skala03.skala_backend.entity.JobRoleKeyword;
 import com.skala03.skala_backend.entity.Keyword;
 import com.skala03.skala_backend.entity.Session;
 import com.skala03.skala_backend.entity.User;
-import com.skala03.skala_backend.repository.AdminRepository; // ✅ 추가
+import com.skala03.skala_backend.repository.AdminRepository;
 import com.skala03.skala_backend.repository.AdminResultRepository;
 import com.skala03.skala_backend.repository.ApplicantKeywordScoreRepository;
 import com.skala03.skala_backend.repository.KeywordRepository;
@@ -36,17 +36,17 @@ public class AdminResultService {
     private final ApplicantKeywordScoreRepository keywordScoreRepository;
     private final KeywordRepository keywordRepository;
     private final UserRepository userRepository;
-    private final AdminRepository adminRepository; // ✅ AdminRepository 추가
+    private final AdminRepository adminRepository;
 
     public List<AdminResultDto> getJobRoleResults(String jobRoleId) {
         List<Applicant> applicants = adminResultRepository.findApplicantsByJobRoleId(jobRoleId);
 
         return applicants.stream()
-                .map(applicant -> convertToDto(applicant, jobRoleId)) // ✅ jobRoleId 전달
+                .map(applicant -> convertToDto(applicant, jobRoleId)) //  jobRoleId 전달
                 .collect(Collectors.toList());
     }
 
-    // ✅ jobRoleId 파라미터 추가
+    // jobRoleId 파라미터 추가
     private AdminResultDto convertToDto(Applicant applicant, String jobRoleId) {
         AdminResultDto dto = new AdminResultDto();
 
@@ -62,7 +62,7 @@ public class AdminResultService {
         // 세션 정보 매핑
         setSessionInfo(dto, applicant);
 
-        // ✅ 선택된 키워드만 필터링하여 키워드 점수 매핑
+        // 선택된 키워드만 필터링하여 키워드 점수 매핑
         setSelectedKeywordScores(dto, applicant, jobRoleId);
 
         return dto;
@@ -111,7 +111,7 @@ public class AdminResultService {
     }
 
     /**
-     * ✅ 선택된 키워드만 필터링하여 키워드 점수 설정
+     *  선택된 키워드만 필터링하여 키워드 점수 설정
      */
     private void setSelectedKeywordScores(AdminResultDto dto, Applicant applicant, String jobRoleId) {
         // 1. 해당 직무에서 선택된 키워드 ID 목록 조회

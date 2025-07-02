@@ -23,7 +23,7 @@ public class ApplicantService {
     private ApplicantRepository applicantRepository;
 
     @Autowired
-    private SessionRepository sessionRepository;  // ✅ 추가
+    private SessionRepository sessionRepository;
 
     // 전체 지원자 리스트 조회
     @Transactional(readOnly = true)
@@ -279,7 +279,7 @@ public class ApplicantService {
         );
     }
 
-    // ✅ 세션 재편성 (기존 세션 정보 완전히 복사 + 빈 세션 자동 삭제)
+    //  세션 재편성 (기존 세션 정보 완전히 복사 + 빈 세션 자동 삭제)
     @Transactional
     public ApplicantDto.SessionReorganizeResponse reorganizeSessions(
             ApplicantDto.SessionReorganizeRequest request) {
@@ -301,7 +301,7 @@ public class ApplicantService {
         Map<Integer, List<Applicant>> sessionGroups = selectedApplicants.stream()
                 .collect(Collectors.groupingBy(Applicant::getSessionId));
 
-        // 2. ✅ 기존 세션 정보 조회 (첫 번째 지원자의 세션 정보 사용)
+        // 2. 기존 세션 정보 조회 (첫 번째 지원자의 세션 정보 사용)
         Integer originalSessionId = selectedApplicants.get(0).getSessionId();
         Session originalSession = sessionRepository.findById(originalSessionId)
                 .orElseThrow(() -> new RuntimeException("Original session not found: " + originalSessionId));
@@ -309,7 +309,7 @@ public class ApplicantService {
         // 3. 새 세션 ID 생성
         Integer newSessionId = applicantRepository.findMaxSessionIdFromSessions() + 1;
 
-        // 4. ✅ 기존 세션 정보를 완전히 복사하여 새 세션 생성 (session_id와 applicants_user_id만 다름)
+        // 4. 기존 세션 정보를 완전히 복사하여 새 세션 생성 (session_id와 applicants_user_id만 다름)
         String applicantIdsStr = String.join(",", selectedApplicantIds);
 
         applicantRepository.createNewSessionFromExisting(

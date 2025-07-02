@@ -119,7 +119,7 @@ public class InterviewSessionService {
         result.put("status", participant.getParticipantStatus());
         result.put("lastPingAt", participant.getLastPingAt());
 
-        // ✅ 세션ID 추가
+        //  세션ID 추가
         Integer sessionId = sessionRepository.findCurrentSessionIdByRoomAndUser(roomId, userId)
                 .orElse(null);
         result.put("sessionId", sessionId);
@@ -328,7 +328,7 @@ public class InterviewSessionService {
 
         Applicant applicant = applicantOpt.get();
 
-        // 2. ✅ selected=true인 키워드 점수만 조회
+        // 2. selected=true인 키워드 점수만 조회
         List<ApplicantKeywordScore> keywordScores =
                 applicantKeywordScoreRepository.findByApplicantIdWithSelectedKeywords(applicantId);
 
@@ -357,7 +357,7 @@ public class InterviewSessionService {
         result.put("jobRoleName", applicant.getJobRole().getJobRoleName());
         result.put("evaluations", evaluations);
         result.put("summaryUrl", applicant.getIndividualQnaPath());
-        result.put("totalComment", applicant.getTotalComment()); // ✅ totalComment 추가
+        result.put("totalComment", applicant.getTotalComment()); //  totalComment 추가
         return result;
     }
 

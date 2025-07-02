@@ -38,7 +38,7 @@ public class TranscriptionService {
     private final VitoAuthService vitoAuthService;
     private final ObjectMapper objectMapper;
 
-    // 메모리에 상태 저장 (실제 운영환경에서는 Redis나 DB 사용 권장)
+    // 메모리에 상태 저장
     private final Map<String, String> transcriptionStatusMap = new ConcurrentHashMap<>();
     private final Map<String, TranscriptionResult> transcriptionResultMap = new ConcurrentHashMap<>();
     private final Map<String, String> transcriptionErrorMap = new ConcurrentHashMap<>();

@@ -27,7 +27,7 @@ public class InterviewerController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ 기존 DTO 재사용 - InterviewScheduleResponse
+    //  기존 DTO 재사용 - InterviewScheduleResponse
     @GetMapping("/room-sessions/{roomId}")
     @Operation(summary = "룸별 세션 목록 조회", description = "룸 ID로 해당 룸의 모든 세션과 지원자 정보를 조회합니다.")
     public ResponseEntity<List<InterviewScheduleResponse>> getRoomSessions(@PathVariable String roomId) {
@@ -36,7 +36,7 @@ public class InterviewerController {
     }
 
     /**
-     * ✅ 면접관 상태 변경 (단순 버전) - 이 메서드를 맨 마지막에 추가하세요
+     *  면접관 상태 변경
      */
     @PutMapping("/status/{userId}")
     @Operation(summary = "면접관 상태 변경", description = "면접관 ID로 상태를 변경합니다. (OFFLINE, WAITING, IN_PROGRESS)")
