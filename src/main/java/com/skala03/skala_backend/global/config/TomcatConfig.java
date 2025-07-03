@@ -13,7 +13,7 @@ public class TomcatConfig {
     @Bean
     public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatCustomizer() {
         return factory -> factory.addConnectorCustomizers((Connector connector) -> {
-            connector.setAsyncTimeout(7200_000); // 5분
+            connector.setAsyncTimeout(600_000); // 10분
         });
     }
 }
