@@ -42,16 +42,16 @@ public class FastApiClient {
 
     @PostConstruct
     public void init() {
-        // 🔧 연결 풀 설정
+        // 연결 풀 설정
         ConnectionProvider connectionProvider = ConnectionProvider.builder("fastapi-pool")
                 .maxConnections(30)
-                .maxIdleTime(Duration.ofMinutes(2))
-                .maxLifeTime(Duration.ofMinutes(5))
+                .maxIdleTime(Duration.ofMinutes(5))
+                .maxLifeTime(Duration.ofMinutes(10))
                 .pendingAcquireTimeout(Duration.ofSeconds(20))
                 .evictInBackground(Duration.ofSeconds(30))
                 .build();
 
-        // 🔧 HttpClient 전역 타임아웃 설정 (5분)
+        // HttpClient 전역 타임아웃 설정 (5분)
         HttpClient httpClient = HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15_000) // 연결 타임아웃: 15초
                 .responseTimeout(Duration.ofMinutes(5)) // ✅ 전역 응답 타임아웃: 5분
@@ -59,7 +59,7 @@ public class FastApiClient {
                         conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.MINUTES))   // ✅ 전역 읽기 타임아웃: 5분
                                 .addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.MINUTES))); // 쓰기 타임아웃: 1분
 
-        // 🔧 WebClient 생성
+        // WebClient 생성
         this.webClient = WebClient.builder()
                 .baseUrl(fastApiBaseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
@@ -121,7 +121,7 @@ public class FastApiClient {
     // ===== Full Pipeline 메서드 (타임아웃 제거) =====
     public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
         try {
-            log.info("📤 FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
+            log.info(" FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
                     request.getSessionId(), request.getApplicantIds().size());
 
             FastApiPipelineResponse response = webClient.post()
@@ -140,7 +140,7 @@ public class FastApiClient {
                             }
                     )
                     .bodyToMono(FastApiPipelineResponse.class)
-                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
+                    //  .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .retryWhen(Retry.backoff(1, Duration.ofSeconds(10)) // 재시도 1회
                             .filter(throwable -> {
                                 // 4xx 에러는 재시도하지 않음
@@ -152,7 +152,7 @@ public class FastApiClient {
                                 return true;
                             })
                             .doBeforeRetry(retrySignal ->
-                                    log.warn("🔄 FastAPI Pipeline 재시도: attempt={}, error={}",
+                                    log.warn(" FastAPI Pipeline 재시도: attempt={}, error={}",
                                             retrySignal.totalRetries() + 1, retrySignal.failure().getMessage())))
                     .doOnSuccess(res -> {
                         if (res != null && res.isSuccess()) {
