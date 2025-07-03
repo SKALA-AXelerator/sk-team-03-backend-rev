@@ -73,7 +73,7 @@ public class InterviewSessionController {
         return ResponseEntity.ok(interviewSessionService.updateSessionToInProgress(sessionId));
     }
 */
-    @Operation(summary = "녹음 중지 눌렀을 떄 상태 반영", description = "세션 상태를 COMPLETED로 변경")
+    @Operation(summary = "녹음 중지 눌렀을 때 상태 반영", description = "세션 상태를 COMPLETED로 변경")
     @PutMapping("/status/{sessionId}/complete")
     public ResponseEntity<Map<String, Object>> completeSession(
             @PathVariable Integer sessionId) {
