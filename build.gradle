@@ -23,6 +23,7 @@ repositories {
 	mavenCentral()
 }
 
+
 // Spring AI 관련 설정 주석 처리
 // ext {
 //     set('springAiVersion', "1.0.0")
