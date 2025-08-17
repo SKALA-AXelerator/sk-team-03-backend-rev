@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.interview;
 
 // ================================
 // 2. REPOSITORY
@@ -7,8 +7,8 @@ package com.skala03.skala_backend.repository;
 // RoomParticipantRepository.java
 
 
-import com.skala03.skala_backend.entity.RoomParticipant;
-import com.skala03.skala_backend.entity.RoomParticipantId;
+import com.skala03.skala_backend.entity.interview.RoomParticipant;
+import com.skala03.skala_backend.entity.interview.RoomParticipantId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

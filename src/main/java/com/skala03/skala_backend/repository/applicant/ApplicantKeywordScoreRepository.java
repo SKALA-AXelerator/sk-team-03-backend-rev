@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.applicant;
 
-import com.skala03.skala_backend.entity.ApplicantKeywordScore;
-import com.skala03.skala_backend.entity.ApplicantKeywordScoreId;
+import com.skala03.skala_backend.entity.applicant.ApplicantKeywordScore;
+import com.skala03.skala_backend.entity.applicant.ApplicantKeywordScoreId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,7 +1,7 @@
 // AdminResultRepository.java
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.admin;
 
-import com.skala03.skala_backend.entity.Applicant;
+import com.skala03.skala_backend.entity.applicant.Applicant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

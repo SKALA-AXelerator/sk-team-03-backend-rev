@@ -1,6 +1,6 @@
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.auth;
 
-import com.skala03.skala_backend.entity.RefreshToken;
+import com.skala03.skala_backend.entity.auth.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
