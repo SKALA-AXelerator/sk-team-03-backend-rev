@@ -20,7 +20,7 @@ import reactor.netty.resources.ConnectionProvider;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import com.skala03.skala_backend.dto.InterviewProcessingDto;
+import com.skala03.skala_backend.dto.interview.InterviewProcessingDto;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
