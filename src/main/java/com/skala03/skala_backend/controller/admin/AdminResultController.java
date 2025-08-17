@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.admin;
 
-import com.skala03.skala_backend.dto.AdminResultDto;
-import com.skala03.skala_backend.service.AdminResultService;
+import com.skala03.skala_backend.dto.admin.AdminResultDto;
+import com.skala03.skala_backend.service.admin.AdminResultService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

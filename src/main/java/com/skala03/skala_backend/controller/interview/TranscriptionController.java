@@ -3,10 +3,10 @@
 // ========================================
 
 // TranscriptionController.java
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.interview;
 
-import com.skala03.skala_backend.dto.TranscriptionDto;
-import com.skala03.skala_backend.service.TranscriptionService;
+import com.skala03.skala_backend.dto.interview.TranscriptionDto;
+import com.skala03.skala_backend.service.interview.TranscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
