@@ -95,21 +95,6 @@ java -jar build/libs/app.jar
 - `POST /upload-audio` - 음성 파일 업로드
 - `GET /transcription/{transcriptionId}` - 전사 결과 조회
 
-## 🔐 보안 설정
-
-### JWT 인증
-- Access Token: 24시간 유효
-- Refresh Token: 7일 유효
-- 모든 API는 JWT 토큰 검증 필요
-
-### CORS 설정
-```java
-@CrossOrigin(origins = {
-    "http://localhost:3000",      // 개발 환경
-    "https://your-domain.com"     // 프로덕션 환경
-})
-```
-
 ## 📊 주요 데이터베이스 테이블
 
 - **users**: 사용자 정보 (ADMIN, INTERVIEWER)
