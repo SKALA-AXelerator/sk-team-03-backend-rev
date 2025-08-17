@@ -1,12 +1,12 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.applicant;
 
-import com.skala03.skala_backend.dto.ApplicantDto;
-import com.skala03.skala_backend.entity.Applicant;
-import com.skala03.skala_backend.entity.InterviewStatus;
-import com.skala03.skala_backend.entity.JobRole;
-import com.skala03.skala_backend.entity.Session;  // ✅ 추가
-import com.skala03.skala_backend.repository.ApplicantRepository;
-import com.skala03.skala_backend.repository.SessionRepository;  // ✅ 추가
+import com.skala03.skala_backend.dto.applicant.ApplicantDto;
+import com.skala03.skala_backend.entity.applicant.Applicant;
+import com.skala03.skala_backend.entity.interview.InterviewStatus;
+import com.skala03.skala_backend.entity.admin.JobRole;
+import com.skala03.skala_backend.entity.interview.Session;  // ✅ 추가
+import com.skala03.skala_backend.repository.applicant.ApplicantRepository;
+import com.skala03.skala_backend.repository.interview.SessionRepository;  // ✅ 추가
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
