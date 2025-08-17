@@ -19,7 +19,7 @@ src/main/java/com/skala03/skala_backend/
 │   ├── admin/          # 관리자 API
 │   ├── applicant/      # 지원자 API
 │   ├── auth/           # 인증 API
-│   └── session/        # 면접 세션 API
+│   └── interview/      # 면접 API
 ├── service/            # 비즈니스 로직
 ├── repository/         # 데이터 접근 계층
 ├── entity/             # JPA 엔티티
