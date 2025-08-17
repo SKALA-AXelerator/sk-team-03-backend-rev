@@ -1,7 +1,7 @@
 
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.interview;
 
-import com.skala03.skala_backend.entity.Session;
+import com.skala03.skala_backend.entity.interview.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

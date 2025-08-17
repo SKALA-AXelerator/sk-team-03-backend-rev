@@ -1,9 +1,9 @@
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.admin;
 
-import com.skala03.skala_backend.entity.Keyword;
-import com.skala03.skala_backend.entity.KeywordCriteria;
-import com.skala03.skala_backend.entity.JobRole;
-import com.skala03.skala_backend.entity.JobRoleKeyword;
+import com.skala03.skala_backend.entity.admin.Keyword;
+import com.skala03.skala_backend.entity.admin.KeywordCriteria;
+import com.skala03.skala_backend.entity.admin.JobRole;
+import com.skala03.skala_backend.entity.admin.JobRoleKeyword;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

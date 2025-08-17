@@ -1,7 +1,7 @@
 // Repository
-package com.skala03.skala_backend.repository;
+package com.skala03.skala_backend.repository.admin;
 
-import com.skala03.skala_backend.entity.Keyword;
+import com.skala03.skala_backend.entity.admin.Keyword;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 
