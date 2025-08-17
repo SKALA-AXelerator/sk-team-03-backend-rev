@@ -1,10 +1,9 @@
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.admin;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
+
 import java.util.List;
 
 public class AdminDto {

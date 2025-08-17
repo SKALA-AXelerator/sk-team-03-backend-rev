@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.interview;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
