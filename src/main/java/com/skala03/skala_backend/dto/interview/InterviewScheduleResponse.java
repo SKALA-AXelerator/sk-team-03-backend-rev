@@ -1,6 +1,6 @@
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.interview;
 
-import com.skala03.skala_backend.entity.Session;
+import com.skala03.skala_backend.entity.interview.Session;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.interview;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

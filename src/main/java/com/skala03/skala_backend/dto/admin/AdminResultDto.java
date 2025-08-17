@@ -1,5 +1,5 @@
 // AdminResultDto.java
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.admin;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

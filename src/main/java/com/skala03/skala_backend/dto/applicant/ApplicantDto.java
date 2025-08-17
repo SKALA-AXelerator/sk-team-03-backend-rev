@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.dto;
+package com.skala03.skala_backend.dto.applicant;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
