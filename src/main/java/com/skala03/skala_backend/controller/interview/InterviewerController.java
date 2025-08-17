@@ -1,14 +1,14 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.interview;
 
-import com.skala03.skala_backend.dto.InterviewerResponse;
-import com.skala03.skala_backend.dto.InterviewScheduleResponse;
-import com.skala03.skala_backend.service.InterviewerService;
+import com.skala03.skala_backend.dto.interview.InterviewerResponse;
+import com.skala03.skala_backend.dto.interview.InterviewScheduleResponse;
+import com.skala03.skala_backend.service.interview.InterviewerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.skala03.skala_backend.dto.ParticipantStatusUpdateRequest;
+import com.skala03.skala_backend.dto.interview.ParticipantStatusUpdateRequest;
 
 import java.util.List;
 

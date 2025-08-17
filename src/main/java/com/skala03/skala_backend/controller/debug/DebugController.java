@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.debug;
 
-import com.skala03.skala_backend.entity.User;
-import com.skala03.skala_backend.repository.UserRepository;
+import com.skala03.skala_backend.entity.auth.User;
+import com.skala03.skala_backend.repository.auth.UserRepository;
 import com.skala03.skala_backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

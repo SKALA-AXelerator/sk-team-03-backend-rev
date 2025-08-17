@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.interview;
 
-import com.skala03.skala_backend.dto.InterviewProcessingDto;
-import com.skala03.skala_backend.service.InterviewProcessingService;
+import com.skala03.skala_backend.dto.interview.InterviewProcessingDto;
+import com.skala03.skala_backend.service.interview.InterviewProcessingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

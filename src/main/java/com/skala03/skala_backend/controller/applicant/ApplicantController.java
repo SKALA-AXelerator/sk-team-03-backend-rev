@@ -1,9 +1,9 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.applicant;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.skala03.skala_backend.dto.ApplicantDto;
-import com.skala03.skala_backend.service.ApplicantService;
+import com.skala03.skala_backend.dto.applicant.ApplicantDto;
+import com.skala03.skala_backend.service.applicant.ApplicantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.interview;
 
-import com.skala03.skala_backend.dto.InterviewSessionDto;
-import com.skala03.skala_backend.service.InterviewSessionService;
+import com.skala03.skala_backend.dto.interview.InterviewSessionDto;
+import com.skala03.skala_backend.service.interview.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;

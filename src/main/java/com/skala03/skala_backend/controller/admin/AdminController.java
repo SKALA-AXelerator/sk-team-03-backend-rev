@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.controller;
+package com.skala03.skala_backend.controller.admin;
 
-import com.skala03.skala_backend.dto.AdminDto;
-import com.skala03.skala_backend.service.AdminService;
+import com.skala03.skala_backend.dto.admin.AdminDto;
+import com.skala03.skala_backend.service.admin.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
