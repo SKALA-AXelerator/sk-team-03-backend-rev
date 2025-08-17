@@ -3,10 +3,10 @@
 // ========================================
 
 // TranscriptionService.java - CompletableFuture 기반 서비스
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.interview;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skala03.skala_backend.dto.TranscriptionResult;
+import com.skala03.skala_backend.dto.interview.TranscriptionResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;

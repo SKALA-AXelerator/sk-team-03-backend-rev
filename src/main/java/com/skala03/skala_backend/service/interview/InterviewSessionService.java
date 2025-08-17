@@ -1,7 +1,17 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.interview;
 
-import com.skala03.skala_backend.entity.*;
-import com.skala03.skala_backend.repository.*;
+import com.skala03.skala_backend.entity.admin.Keyword;
+import com.skala03.skala_backend.entity.applicant.Applicant;
+import com.skala03.skala_backend.entity.applicant.ApplicantKeywordScore;
+import com.skala03.skala_backend.entity.interview.InterviewContent;
+import com.skala03.skala_backend.entity.interview.RoomParticipant;
+import com.skala03.skala_backend.entity.interview.Session;
+import com.skala03.skala_backend.repository.admin.KeywordRepository;
+import com.skala03.skala_backend.repository.applicant.ApplicantKeywordScoreRepository;
+import com.skala03.skala_backend.repository.applicant.ApplicantRepository;
+import com.skala03.skala_backend.repository.interview.InterviewContentRepository;
+import com.skala03.skala_backend.repository.interview.RoomParticipantRepository;
+import com.skala03.skala_backend.repository.interview.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

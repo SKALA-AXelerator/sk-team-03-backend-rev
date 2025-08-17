@@ -1,10 +1,10 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.auth;
 
-import com.skala03.skala_backend.dto.AuthDto;
-import com.skala03.skala_backend.entity.User;
-import com.skala03.skala_backend.entity.RefreshToken;
-import com.skala03.skala_backend.repository.UserRepository;
-import com.skala03.skala_backend.repository.RefreshTokenRepository;
+import com.skala03.skala_backend.dto.auth.AuthDto;
+import com.skala03.skala_backend.entity.auth.User;
+import com.skala03.skala_backend.entity.auth.RefreshToken;
+import com.skala03.skala_backend.repository.auth.UserRepository;
+import com.skala03.skala_backend.repository.auth.RefreshTokenRepository;
 import com.skala03.skala_backend.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

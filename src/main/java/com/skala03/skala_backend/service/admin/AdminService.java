@@ -1,12 +1,12 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.admin;
 
 import com.skala03.skala_backend.client.FastApiClient;
-import com.skala03.skala_backend.dto.AdminDto;
-import com.skala03.skala_backend.entity.Keyword;
-import com.skala03.skala_backend.entity.KeywordCriteria;
-import com.skala03.skala_backend.entity.JobRole;
-import com.skala03.skala_backend.entity.JobRoleKeyword;
-import com.skala03.skala_backend.repository.AdminRepository;
+import com.skala03.skala_backend.dto.admin.AdminDto;
+import com.skala03.skala_backend.entity.admin.Keyword;
+import com.skala03.skala_backend.entity.admin.KeywordCriteria;
+import com.skala03.skala_backend.entity.admin.JobRole;
+import com.skala03.skala_backend.entity.admin.JobRoleKeyword;
+import com.skala03.skala_backend.repository.admin.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,7 +1,7 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.admin;
 
-import com.skala03.skala_backend.entity.Applicant;
-import com.skala03.skala_backend.repository.ApplicantRepository;
+import com.skala03.skala_backend.entity.applicant.Applicant;
+import com.skala03.skala_backend.repository.applicant.ApplicantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

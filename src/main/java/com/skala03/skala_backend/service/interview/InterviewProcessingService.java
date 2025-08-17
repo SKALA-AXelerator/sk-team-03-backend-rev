@@ -1,9 +1,17 @@
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.interview;
 
 import com.skala03.skala_backend.client.FastApiClient;
-import com.skala03.skala_backend.dto.InterviewProcessingDto;
-import com.skala03.skala_backend.entity.*;
-import com.skala03.skala_backend.repository.*;
+import com.skala03.skala_backend.dto.interview.InterviewProcessingDto;
+import com.skala03.skala_backend.entity.admin.Keyword;
+import com.skala03.skala_backend.entity.applicant.Applicant;
+import com.skala03.skala_backend.entity.applicant.ApplicantKeywordScore;
+import com.skala03.skala_backend.entity.interview.InterviewStatus;
+import com.skala03.skala_backend.entity.interview.Session;
+import com.skala03.skala_backend.repository.admin.AdminRepository;
+import com.skala03.skala_backend.repository.admin.KeywordRepository;
+import com.skala03.skala_backend.repository.applicant.ApplicantKeywordScoreRepository;
+import com.skala03.skala_backend.repository.applicant.ApplicantRepository;
+import com.skala03.skala_backend.repository.interview.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

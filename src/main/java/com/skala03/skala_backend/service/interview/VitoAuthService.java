@@ -1,5 +1,5 @@
 // VitoAuthService.java - 인증 서비스
-package com.skala03.skala_backend.service;
+package com.skala03.skala_backend.service.interview;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
