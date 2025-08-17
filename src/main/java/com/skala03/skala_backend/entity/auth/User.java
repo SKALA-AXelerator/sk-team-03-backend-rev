@@ -1,5 +1,7 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.auth;
 
+import com.skala03.skala_backend.entity.interview.InterviewRoom;
+import com.skala03.skala_backend.entity.interview.RoomParticipant;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

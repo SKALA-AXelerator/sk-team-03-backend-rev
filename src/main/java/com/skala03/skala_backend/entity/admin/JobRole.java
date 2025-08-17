@@ -1,5 +1,6 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.admin;
 
+import com.skala03.skala_backend.entity.applicant.Applicant;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

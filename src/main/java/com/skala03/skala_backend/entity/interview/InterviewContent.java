@@ -1,6 +1,7 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.interview;
 
 
+import com.skala03.skala_backend.entity.applicant.Applicant;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

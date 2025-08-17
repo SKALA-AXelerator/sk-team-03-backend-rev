@@ -3,8 +3,9 @@
 // ================================
 
 // RoomParticipant.java
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.interview;
 
+import com.skala03.skala_backend.entity.auth.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

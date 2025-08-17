@@ -1,5 +1,8 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.applicant;
 
+import com.skala03.skala_backend.entity.interview.InterviewContent;
+import com.skala03.skala_backend.entity.admin.JobRole;
+import com.skala03.skala_backend.entity.interview.InterviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -7,9 +10,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
