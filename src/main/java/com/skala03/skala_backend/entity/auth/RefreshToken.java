@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.auth;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package com.skala03.skala_backend.entity;
+package com.skala03.skala_backend.entity.admin;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +8,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobRoleKeywordId implements Serializable {
-    private String jobRoleId;
+public class KeywordCriteriaId implements Serializable {
     private Integer keywordId;
+    private Integer keywordScore;
 }
