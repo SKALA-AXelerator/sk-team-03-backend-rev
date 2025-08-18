@@ -56,6 +56,16 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: DB_PASSWORD
+            - name: VITO_API_CLIENT_ID
+              valueFrom:
+                  secretKeyRef:
+                    name: backend-secret
+                    key: VITO_API_CLIENT_ID
+            - name: VITO_API_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: VITO_API_CLIENT_SECRET
             - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
               valueFrom:
                 configMapKeyRef:
