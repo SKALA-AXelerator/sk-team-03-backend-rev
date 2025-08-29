@@ -56,7 +56,7 @@ public class FastApiClient {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15_000) // 연결 타임아웃: 15초
                 .responseTimeout(Duration.ofMinutes(5)) //  전역 응답 타임아웃: 5분
                 .doOnConnected(conn ->
-                        conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.MINUTES))   // ✅ 전역 읽기 타임아웃: 5분
+                        conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.MINUTES))   // 전역 읽기 타임아웃: 5분
                                 .addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.MINUTES))); // 쓰기 타임아웃: 1분
 
         // WebClient 생성
