@@ -7,6 +7,7 @@ import com.skala03.skala_backend.entity.admin.KeywordCriteria;
 import com.skala03.skala_backend.entity.admin.JobRole;
 import com.skala03.skala_backend.entity.admin.JobRoleKeyword;
 import com.skala03.skala_backend.repository.admin.AdminRepository;
+import com.skala03.skala_backend.dto.client.FastApiDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +90,7 @@ public class AdminService {
             }
 
             // FastAPI 요청 구성 - DB에서 조회한 키워드 정보 사용
-            FastApiClient.FastApiRequest fastApiRequest = FastApiClient.FastApiRequest.builder()
+            FastApiDto.KeywordRequest fastApiRequest = FastApiDto.KeywordRequest.builder()
                     .keywordName(keyword.getKeywordName()) // DB에서 조회
                     .keywordDetail(keyword.getKeywordDetail() != null ? keyword.getKeywordDetail() : "")
                     .build(); // keyword_id 제거
@@ -97,7 +98,7 @@ public class AdminService {
             log.debug("FastAPI 요청 데이터: keywordName={}", fastApiRequest.getKeywordName());
 
             // FastAPI 호출
-            FastApiClient.FastApiResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
+            FastApiDto.KeywordResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
 
             if (fastApiResponse == null) {
                 log.error("FastAPI 응답이 null: keywordId={}", keywordId);
@@ -150,7 +151,7 @@ public class AdminService {
             }
 
             // FastAPI 요청 구성 - ID 없이 이름과 설명만
-            FastApiClient.FastApiRequest fastApiRequest = FastApiClient.FastApiRequest.builder()
+            FastApiDto.KeywordRequest fastApiRequest = FastApiDto.KeywordRequest.builder()
                     .keywordName(keywordName)
                     .keywordDetail(keywordDetail != null ? keywordDetail : "")
                     .build();
@@ -158,7 +159,7 @@ public class AdminService {
             log.debug("FastAPI 요청 데이터: keywordName={}", fastApiRequest.getKeywordName());
 
             // FastAPI 호출
-            FastApiClient.FastApiResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
+            FastApiDto.KeywordResponse fastApiResponse = fastApiClient.generateKeywordCriteria(fastApiRequest);
 
             // 응답 처리 로직은 기존과 동일...
             if (fastApiResponse != null && fastApiResponse.isSuccess() && fastApiResponse.getCriteria() != null) {

@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
+import com.skala03.skala_backend.dto.client.FastApiDto;
 @Component
 @Slf4j
 public class FastApiClient {
@@ -54,7 +54,7 @@ public class FastApiClient {
         // HttpClient 전역 타임아웃 설정 (5분)
         HttpClient httpClient = HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15_000) // 연결 타임아웃: 15초
-                .responseTimeout(Duration.ofMinutes(5)) // ✅ 전역 응답 타임아웃: 5분
+                .responseTimeout(Duration.ofMinutes(5)) //  전역 응답 타임아웃: 5분
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.MINUTES))   // ✅ 전역 읽기 타임아웃: 5분
                                 .addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.MINUTES))); // 쓰기 타임아웃: 1분
@@ -69,15 +69,15 @@ public class FastApiClient {
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(70 * 1024 * 1024)) // 70MB
                 .build();
 
-        log.info("✅ FastAPI WebClient 초기화 완료: baseUrl={}, 전역타임아웃=5분", fastApiBaseUrl);
+        log.info("FastAPI WebClient 초기화 완료: baseUrl={}, 전역타임아웃=5분", fastApiBaseUrl);
     }
 
     // ===== 키워드 생성 메서드 (타임아웃 제거) =====
-    public FastApiResponse generateKeywordCriteria(FastApiRequest request) {
+    public FastApiDto.KeywordResponse generateKeywordCriteria(FastApiDto.KeywordRequest request) {
         try {
             log.info("FastAPI 키워드 생성 호출: keywordName={}", request.getKeywordName());
 
-            FastApiResponse response = webClient.post()
+            FastApiDto.KeywordResponse response = webClient.post()
                     .uri("/ai/generate-keyword-criteria")
                     .bodyValue(request)
                     .retrieve()
@@ -92,18 +92,18 @@ public class FastApiClient {
                                                 clientResponse.statusCode() + "): " + body)));
                             }
                     )
-                    .bodyToMono(FastApiResponse.class)
-                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
+                    .bodyToMono(FastApiDto.KeywordResponse.class)
+                    // .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .retryWhen(Retry.backoff(2, Duration.ofSeconds(3))
                             .filter(throwable -> !(throwable instanceof WebClientResponseException
                                     && ((WebClientResponseException) throwable).getStatusCode().is4xxClientError())))
                     .doOnSuccess(res -> {
                         if (res != null && res.isSuccess()) {
-                            log.info("✅ 키워드 생성 성공: keywordName={}, 기준수={}",
+                            log.info("키워드 생성 성공: keywordName={}, 기준수={}",
                                     res.getKeywordName(), res.getCriteria() != null ? res.getCriteria().size() : 0);
                         }
                     })
-                    .doOnError(error -> log.error("❌ 키워드 생성 오류: ", error))
+                    .doOnError(error -> log.error("키워드 생성 오류: ", error))
                     .block();
 
             if (response == null) {
@@ -113,18 +113,18 @@ public class FastApiClient {
             return response;
 
         } catch (Exception e) {
-            log.error("❌ FastAPI 키워드 생성 클라이언트 오류: ", e);
+            log.error("FastAPI 키워드 생성 클라이언트 오류: ", e);
             throw new RuntimeException("AI 키워드 생성 서비스 호출에 실패했습니다: " + e.getMessage());
         }
     }
 
     // ===== Full Pipeline 메서드 (타임아웃 제거) =====
-    public FastApiPipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
+    public FastApiDto.PipelineResponse callFullPipeline(InterviewProcessingDto.FastApiRequest request) {
         try {
             log.info(" FastAPI full-pipeline 호출 시작: sessionId={}, 지원자수={}",
                     request.getSessionId(), request.getApplicantIds().size());
 
-            FastApiPipelineResponse response = webClient.post()
+            FastApiDto.PipelineResponse response = webClient.post()
                     .uri("/ai/full-pipeline")
                     .bodyValue(request)
                     .retrieve()
@@ -139,7 +139,7 @@ public class FastApiClient {
                                                 clientResponse.statusCode() + "): " + body)));
                             }
                     )
-                    .bodyToMono(FastApiPipelineResponse.class)
+                    .bodyToMono(FastApiDto.PipelineResponse.class)
                     //  .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .retryWhen(Retry.backoff(1, Duration.ofSeconds(10)) // 재시도 1회
                             .filter(throwable -> {
@@ -156,16 +156,16 @@ public class FastApiClient {
                                             retrySignal.totalRetries() + 1, retrySignal.failure().getMessage())))
                     .doOnSuccess(res -> {
                         if (res != null && res.isSuccess()) {
-                            log.info("✅ FastAPI Pipeline 성공: sessionId={}, 성공/실패={}/{}, 처리시간={}초",
+                            log.info("FastAPI Pipeline 성공: sessionId={}, 성공/실패={}/{}, 처리시간={}초",
                                     res.getSessionId(), res.getSuccessfulCount(), res.getFailedCount(),
                                     res.getTotalProcessingTime());
                         } else if (res != null) {
-                            log.warn("⚠️ FastAPI Pipeline 부분 실패: sessionId={}, message={}",
+                            log.warn("FastAPI Pipeline 부분 실패: sessionId={}, message={}",
                                     res.getSessionId(), res.getMessage());
                         }
                     })
                     .doOnError(error -> {
-                        log.error("❌ FastAPI Pipeline 오류: sessionId={}, error={}",
+                        log.error("FastAPI Pipeline 오류: sessionId={}, error={}",
                                 request.getSessionId(), error.getMessage());
                     })
                     .block();
@@ -177,7 +177,7 @@ public class FastApiClient {
             return response;
 
         } catch (Exception e) {
-            log.error("❌ FastAPI Pipeline 클라이언트 오류: sessionId={}", request.getSessionId(), e);
+            log.error("FastAPI Pipeline 클라이언트 오류: sessionId={}", request.getSessionId(), e);
             throw new RuntimeException("면접 처리 서비스 호출에 실패했습니다: " + e.getMessage());
         }
     }
@@ -189,100 +189,16 @@ public class FastApiClient {
                     .uri("/ai/health2")
                     .retrieve()
                     .bodyToMono(String.class)
-                    // ✅ .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
+                    //  .timeout() 제거 - HttpClient 전역 설정 사용 (5분)
                     .block();
 
-            log.debug("✅ FastAPI 헬스체크 성공: {}", response);
+            log.debug("FastAPI 헬스체크 성공: {}", response);
             return true;
         } catch (Exception e) {
-            log.warn("❌ FastAPI 헬스체크 실패: {}", e.getMessage());
+            log.warn("FastAPI 헬스체크 실패: {}", e.getMessage());
             return false;
         }
     }
 
-    // ===== DTO 클래스들 =====
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FastApiRequest {
-        @JsonProperty("keyword_name")
-        private String keywordName;
 
-        @JsonProperty("keyword_detail")
-        private String keywordDetail;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FastApiResponse {
-        private boolean success;
-        private String message;
-        private Map<Integer, String> criteria;
-
-        @JsonProperty("keyword_name")
-        private String keywordName;
-
-        @JsonProperty("error_detail")
-        private String errorDetail;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FastApiPipelineResponse {
-        private boolean success;
-        private String message;
-
-        @JsonProperty("session_id")
-        private Integer sessionId;
-
-        @JsonProperty("raw_stt_s3_path")
-        private String rawSttS3Path;
-
-        @JsonProperty("job_role_name")
-        private String jobRoleName;
-
-        @JsonProperty("evaluation_results")
-        private List<ApplicantResult> evaluationResults;
-
-        @JsonProperty("total_processed")
-        private Integer totalProcessed;
-
-        @JsonProperty("successful_count")
-        private Integer successfulCount;
-
-        @JsonProperty("failed_count")
-        private Integer failedCount;
-
-        @JsonProperty("total_processing_time")
-        private Double totalProcessingTime;
-
-        @JsonProperty("step_times")
-        private Map<String, Double> stepTimes;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ApplicantResult {
-        @JsonProperty("applicant_id")
-        private String applicantId;
-
-        @JsonProperty("applicant_name")
-        private String applicantName;
-
-        @JsonProperty("qna_s3_path")
-        private String qnaS3Path;
-
-        @JsonProperty("pdf_s3_path")
-        private String pdfS3Path;
-
-        @JsonProperty("evaluation_json")
-        private Map<String, Object> evaluationJson;
-    }
 }

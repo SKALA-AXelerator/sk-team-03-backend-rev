@@ -2,6 +2,7 @@ package com.skala03.skala_backend.service.interview;
 
 import com.skala03.skala_backend.client.FastApiClient;
 import com.skala03.skala_backend.dto.interview.InterviewProcessingDto;
+import com.skala03.skala_backend.dto.client.FastApiDto;
 import com.skala03.skala_backend.entity.admin.Keyword;
 import com.skala03.skala_backend.entity.applicant.Applicant;
 import com.skala03.skala_backend.entity.applicant.ApplicantKeywordScore;
@@ -12,6 +13,7 @@ import com.skala03.skala_backend.repository.admin.KeywordRepository;
 import com.skala03.skala_backend.repository.applicant.ApplicantKeywordScoreRepository;
 import com.skala03.skala_backend.repository.applicant.ApplicantRepository;
 import com.skala03.skala_backend.repository.interview.SessionRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,7 +67,7 @@ public class InterviewProcessingService {
 
             // 3. FastAPI 호출 (트랜잭션 외부에서 실행)
             log.info(" FastAPI 호출 시작: sessionId={}", request.getSessionId());
-            FastApiClient.FastApiPipelineResponse response = fastApiClient.callFullPipeline(fastApiRequest);
+            FastApiDto.PipelineResponse response = fastApiClient.callFullPipeline(fastApiRequest);
 
             if (!response.isSuccess()) {
                 throw new RuntimeException("FastAPI 처리 실패: " + response.getMessage());
@@ -130,13 +132,13 @@ public class InterviewProcessingService {
                 evaluationCriteria.get(keywordName).put(score.toString(), guideline);
             }
 
-            log.info("✅ 평가기준 변환 완료: {}개 키워드, 총 {}개 기준",
+            log.info("평가기준 변환 완료: {}개 키워드, 총 {}개 기준",
                     evaluationCriteria.size(), criteriaData.size());
 
             return evaluationCriteria;
 
         } catch (Exception e) {
-            log.error("❌ 평가기준 조회 실패: jobRoleName={}, error={}", jobRoleName, e.getMessage(), e);
+            log.error("평가기준 조회 실패: jobRoleName={}, error={}", jobRoleName, e.getMessage(), e);
             return Collections.emptyMap();
         }
     }
@@ -144,7 +146,7 @@ public class InterviewProcessingService {
     /**
      * FastAPI 응답을 데이터베이스에 저장 (각각 독립적인 트랜잭션)
      */
-    private ProcessingResult saveProcessingResults(FastApiClient.FastApiPipelineResponse response) {
+    private ProcessingResult saveProcessingResults(FastApiDto.PipelineResponse response) {
         log.info(" DB 저장 시작: sessionId={}", response.getSessionId());
 
         ProcessingResult result = new ProcessingResult();
@@ -152,29 +154,29 @@ public class InterviewProcessingService {
         try {
             // 1. 세션 정보 업데이트 (독립적인 트랜잭션)
             updateSessionStatus(response);
-            log.info("✅ 세션 상태 업데이트 완료: sessionId={}", response.getSessionId());
+            log.info("세션 상태 업데이트 완료: sessionId={}", response.getSessionId());
         } catch (Exception e) {
-            log.error("❌ 세션 상태 업데이트 실패: sessionId={}, error={}", response.getSessionId(), e.getMessage());
+            log.error("세션 상태 업데이트 실패: sessionId={}, error={}", response.getSessionId(), e.getMessage());
             // 세션 업데이트 실패해도 지원자 저장은 계속 진행
         }
 
         // 2. 지원자별 결과 저장 (각각 독립적인 트랜잭션)
-        List<FastApiClient.ApplicantResult> results = response.getEvaluationResults();
+        List<FastApiDto.ApplicantResult> results = response.getEvaluationResults();
         result.setTotalProcessed(results.size());
 
-        for (FastApiClient.ApplicantResult applicantResult : results) {
+        for (FastApiDto.ApplicantResult applicantResult : results) {
             try {
                 saveApplicantResult(applicantResult);
                 result.incrementSuccess();
-                log.info("✅ 지원자 저장 완료: applicantId={}", applicantResult.getApplicantId());
+                log.info("지원자 저장 완료: applicantId={}", applicantResult.getApplicantId());
             } catch (Exception e) {
                 result.incrementFailure();
-                log.error("❌ 지원자 저장 실패: applicantId={}, error={}",
+                log.error("지원자 저장 실패: applicantId={}, error={}",
                         applicantResult.getApplicantId(), e.getMessage(), e);
             }
         }
 
-        log.info("✅ DB 저장 완료: sessionId={}, 성공={}, 실패={}",
+        log.info("DB 저장 완료: sessionId={}, 성공={}, 실패={}",
                 response.getSessionId(), result.getSuccessCount(), result.getFailureCount());
 
         return result;
@@ -184,7 +186,7 @@ public class InterviewProcessingService {
      * 세션 상태 업데이트 (새로운 트랜잭션)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateSessionStatus(FastApiClient.FastApiPipelineResponse response) {
+    public void updateSessionStatus(FastApiDto.PipelineResponse response) {
         Optional<Session> sessionOpt = sessionRepository.findById(response.getSessionId());
         if (sessionOpt.isPresent()) {
             Session session = sessionOpt.get();
@@ -192,7 +194,7 @@ public class InterviewProcessingService {
             session.setRawDataPath(response.getRawSttS3Path());
             sessionRepository.save(session);
 
-            log.debug(" 세션 저장 완료: sessionId={}, status={}",
+            log.debug("세션 저장 완료: sessionId={}, status={}",
                     response.getSessionId(), session.getSessionStatus());
         } else {
             throw new RuntimeException("세션을 찾을 수 없습니다: " + response.getSessionId());
@@ -203,7 +205,7 @@ public class InterviewProcessingService {
      * 개별 지원자 결과 저장 (새로운 트랜잭션)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void saveApplicantResult(FastApiClient.ApplicantResult result) {
+    public void saveApplicantResult(FastApiDto.ApplicantResult result) {
         // 1. 지원자 정보 업데이트
         Optional<Applicant> applicantOpt = applicantRepository.findById(result.getApplicantId());
         if (applicantOpt.isEmpty()) {
@@ -264,15 +266,15 @@ public class InterviewProcessingService {
             }
 
         } catch (Exception e) {
-            log.error("❌ 평가 데이터 처리 실패: applicantId={}, error={}",
+            log.error("평가 데이터 처리 실패: applicantId={}, error={}",
                     applicant.getApplicantId(), e.getMessage());
         }
     }
 
-    /**
-     * 키워드별 점수 저장 (호환성 개선)
-     */
-    private void saveKeywordScores(FastApiClient.ApplicantResult result) {
+
+     // 키워드별 점수 저장
+
+    private void saveKeywordScores(FastApiDto.ApplicantResult result) {
         try {
             Map<String, Object> evaluationJson = result.getEvaluationJson();
             if (evaluationJson == null || evaluationJson.containsKey("error")) {
@@ -331,15 +333,15 @@ public class InterviewProcessingService {
             }
 
         } catch (Exception e) {
-            log.error("❌ 키워드 점수 저장 실패: applicantId={}, error={}",
+            log.error("키워드 점수 저장 실패: applicantId={}, error={}",
                     result.getApplicantId(), e.getMessage());
             throw e; // 트랜잭션 롤백을 위해 예외 재발생
         }
     }
 
-    /**
-     * 처리 결과를 추적하는 내부 클래스
-     */
+
+     // 처리 결과를 추적하는 내부 클래스
+
     private static class ProcessingResult {
         private int totalProcessed = 0;
         private int successCount = 0;
