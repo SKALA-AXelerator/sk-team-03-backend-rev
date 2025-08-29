@@ -25,9 +25,9 @@ public class FileDownloadController {
 
     private final FileDownloadService fileDownloadService;
 
-    /**
-     * 특정 직무의 모든 지원자 PDF 파일들을 ZIP으로 다운로드
-     */
+
+     // 특정 직무의 모든 지원자 PDF 파일들을 ZIP으로 다운로드
+
     @GetMapping("/files/download-pdf-zip/{jobRoleId}")
     @Operation(summary = "직무별 PDF ZIP 다운로드")
     @ApiResponse(
@@ -64,9 +64,9 @@ public class FileDownloadController {
         }
     }
 
-    /**
-     * 특정 직무의 모든 지원자 QNA 파일들을 ZIP으로 다운로드
-     */
+
+     // 특정 직무의 모든 지원자 QNA 파일들을 ZIP으로 다운로드
+
     @GetMapping("/files/download-qna-zip/{jobRoleId}")
     @Operation(summary = "직무별 QNA ZIP 다운로드")
     @ApiResponse(

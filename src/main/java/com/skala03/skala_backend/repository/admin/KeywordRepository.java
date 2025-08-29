@@ -1,4 +1,4 @@
-// Repository
+
 package com.skala03.skala_backend.repository.admin;
 
 import com.skala03.skala_backend.entity.admin.Keyword;

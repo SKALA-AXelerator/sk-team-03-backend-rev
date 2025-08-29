@@ -1,17 +1,17 @@
-# configmap.yml
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backend-config
   namespace: sk-team-03
 data:
-  # 🔵 기존 설정들 (유지)
+
   DB_URL: "jdbc:mariadb://mariadb-1.mariadb:3306/sk-team-03"
   SPRING_PROFILES_ACTIVE: "k8s"
   SERVER_PORT: "8080"
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.mariadb.jdbc.Driver"
 
-  # 🆕 대용량 파일 업로드 설정 추가
+  # 대용량 파일 업로드 설정
   SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "500MB"
   SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "500MB"
   SPRING_SERVLET_MULTIPART_ENABLED: "true"

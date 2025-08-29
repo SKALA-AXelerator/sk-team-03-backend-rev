@@ -8,7 +8,7 @@ import java.util.List;
 
 public class AdminDto {
 
-    // 1. 키워드 조회 응답 (/api/admin/keywords)
+    // 키워드 조회 응답 (/api/admin/keywords)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -28,7 +28,7 @@ public class AdminDto {
         private String keywordGuideline;
     }
 
-    // 2. 키워드 생성 요청 (/api/admin/create-keywords)
+    // 키워드 생성 요청 (/api/admin/create-keywords)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -38,7 +38,7 @@ public class AdminDto {
         private List<KeywordCriteriaInfo> keywordCriteria;
     }
 
-    // 3. AI 생성 요청 (/api/admin/ai-generate-keywords/{keyword_id})
+    // AI 생성 요청 (/api/admin/ai-generate-keywords/{keyword_id})
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -47,7 +47,7 @@ public class AdminDto {
         private String keywordDetail;
     }
 
-    // 4. 키워드 수정 요청 (/api/admin/change-keywords/{keyword_id})
+    // 키워드 수정 요청 (/api/admin/change-keywords/{keyword_id})
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -56,7 +56,7 @@ public class AdminDto {
         private List<KeywordCriteriaInfo> keywordCriteria;
     }
 
-    // 5. AI 생성 응답 - 수정됨
+    // AI 생성 응답
     @Data
     @AllArgsConstructor
     @NoArgsConstructor

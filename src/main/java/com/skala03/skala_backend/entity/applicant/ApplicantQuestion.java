@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
-// ApplicantQuestion
+
 @Getter
 @Setter
 @Entity

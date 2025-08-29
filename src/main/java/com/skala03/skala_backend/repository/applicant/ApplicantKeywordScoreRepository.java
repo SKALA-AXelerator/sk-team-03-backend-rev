@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ApplicantKeywordScoreRepository extends JpaRepository<ApplicantKeywordScore, ApplicantKeywordScoreId> {
     List<ApplicantKeywordScore> findByApplicantId(String applicantId);
-    // ✅ 새로 추가: selected=true인 키워드만 조회
+    // selected=true인 키워드만 조회
     @Query("""
         SELECT aks FROM ApplicantKeywordScore aks 
         JOIN Keyword k ON aks.keywordId = k.keywordId 

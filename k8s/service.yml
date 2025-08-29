@@ -1,8 +1,8 @@
-# service.yml
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: sk-team-03-backend-service  # ArgoCD 및 다른 서비스와 구분을 위해 변경
+  name: sk-team-03-backend-service
   namespace: sk-team-03
   labels:
     app: sk-team-03-spring-backend

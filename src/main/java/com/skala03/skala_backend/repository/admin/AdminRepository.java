@@ -24,7 +24,7 @@ public interface AdminRepository extends JpaRepository<Keyword, Integer> {
 
     // === KeywordCriteria 관련 메서드들 ===
 
-    // ✅ 이 부분만 수정: JPQL → nativeQuery
+    // JPQL → nativeQuery
     @Query(value = "SELECT * FROM keyword_criteria WHERE keyword_id = :keywordId ORDER BY keyword_score DESC", nativeQuery = true)
     List<KeywordCriteria> findCriteriaByKeywordId(@Param("keywordId") Integer keywordId);
 

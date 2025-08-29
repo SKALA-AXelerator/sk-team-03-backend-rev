@@ -30,7 +30,7 @@ public class RoomParticipant {
     @Column(name = "participant_role", nullable = false)
     private ParticipantRole participantRole;
 
-    // ✅ 상태 필드 추가
+    // 상태 필드 추가
     @Enumerated(EnumType.STRING)
     @Column(name = "participant_status", nullable = false)
     private ParticipantStatus participantStatus = ParticipantStatus.OFFLINE;

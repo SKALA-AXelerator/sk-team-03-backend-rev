@@ -39,9 +39,9 @@ public class InterviewSessionService {
 
     @Autowired
     private KeywordRepository keywordRepository;
-    /**
-     * 세션 리스트 화면 입장 (offline → waiting)
-     */
+
+     // 세션 리스트 화면 입장 (offline → waiting)
+
     public void enterSessionList(String roomId, String userId) {
         RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다."));
@@ -95,9 +95,9 @@ public class InterviewSessionService {
 
         return true; // 성공
     }
-    /**
-     * 세션 상태 조회 - sessionStatus만 반환
-     */
+
+     // 세션 상태 조회 - sessionStatus만 반환
+
     @Transactional(readOnly = true)
     public Map<String, Object> getSessionStatus(Integer sessionId) {
 
@@ -118,9 +118,9 @@ public class InterviewSessionService {
 
         return result;
     }
-    /**
-     * 참가자 상태 조회 - Map으로 직접 반환 (세션ID 포함)
-     */
+
+     // 참가자 상태 조회 - Map으로 직접 반환 (세션ID 포함)
+
     public Map<String, Object> getParticipantStatus(String roomId, String userId) {
         RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("참가자를 찾을 수 없습니다."));
@@ -137,9 +137,9 @@ public class InterviewSessionService {
         return result;
     }
 
-    /**
-     * 면접 종료
-     */
+
+     // 면접 종료
+
     public void endInterview(String roomId, Integer sessionId) {
         // 세션 상태 변경
         Session session = sessionRepository.findById(sessionId)
@@ -158,9 +158,9 @@ public class InterviewSessionService {
         });
     }
 
-    /**
-     * 세션 종료
-     */
+
+     // 세션 종료
+
     public void endSession(String roomId, String userId) {
         RoomParticipant participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 방의 참가자를 찾을 수 없습니다."));
@@ -168,9 +168,9 @@ public class InterviewSessionService {
         participant.updateStatus(RoomParticipant.ParticipantStatus.OFFLINE);
         roomParticipantRepository.save(participant);
     }
-    /**
-     * 세션 상태를 IN_PROGRESS로 변경
-     */
+
+     // 세션 상태를 IN_PROGRESS로 변경
+
     @Transactional
     public Map<String, Object> updateSessionToInProgress(Integer sessionId) {
 
@@ -204,9 +204,9 @@ public class InterviewSessionService {
         return result;
     }
 
-    /**
-     * 세션 상태를 COMPLETED로 변경
-     */
+
+     // 세션 상태를 COMPLETED로 변경
+
     @Transactional
     public Map<String, Object> updateSessionToCompleted(Integer sessionId) {
 
@@ -238,9 +238,9 @@ public class InterviewSessionService {
 
         return result;
     }
-    /**
-     * 여러 지원자의 middleReviewText 조회
-     */
+
+     // 여러 지원자의 middleReviewText 조회
+
     @Transactional(readOnly = true)
     public Map<String, String> getMiddleReviewTexts(List<String> applicantIds) {
 
@@ -276,9 +276,9 @@ public class InterviewSessionService {
     // 유틸리티 메서드
     // ================================
 
-    /**
-     * "sk-01,sk-02,sk-03" 형태의 문자열을 List로 파싱
-     */
+
+     // "sk-01,sk-02,sk-03" 형태의 문자열을 List로 파싱
+
     private List<String> parseUserIds(String userIdsString) {
         if (userIdsString == null || userIdsString.trim().isEmpty()) {
             return List.of();
@@ -294,9 +294,9 @@ public class InterviewSessionService {
     // 지원자 평가 정보 조회 메서드들
     // ============================================
 
-    /**
-     * 여러 지원자 최종 평가 정보 조회
-     */
+
+     // 여러 지원자 최종 평가 정보 조회
+
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getFinalReviews(List<String> applicantIds) {
 
@@ -324,9 +324,9 @@ public class InterviewSessionService {
 
         return finalReviews;
     }
-    /**
-     * 단일 지원자 최종 평가 정보 조회 (selected=true인 키워드만)
-     */
+
+     // 단일 지원자 최종 평가 정보 조회 (selected=true인 키워드만)
+
     @Transactional(readOnly = true)
     public Map<String, Object> getFinalReview(String applicantId) {
 

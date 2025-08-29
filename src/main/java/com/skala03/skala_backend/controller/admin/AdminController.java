@@ -18,7 +18,7 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
-    // 1. 키워드 목록 조회
+    // 키워드 목록 조회
     @GetMapping("/keywords")
     @Operation(summary = "키워드 이름, 키워드 설명, 키워드 평가기준 리스트 조회")
     public ResponseEntity<List<AdminDto.KeywordResponse>> getAllKeywords() {
@@ -30,7 +30,7 @@ public class AdminController {
         }
     }
 
-    // 2. 키워드 생성
+    // 키워드 생성
     @PostMapping("/create-keywords")
     @Operation(summary = "키워드 및 평가 기준 생성 (AI x)")
     public ResponseEntity<String> createKeyword(@RequestBody AdminDto.CreateKeywordRequest request) {
@@ -44,7 +44,7 @@ public class AdminController {
         }
     }
 
-    // 3. AI 기반 평가기준 생성
+    // AI 기반 평가기준 생성
     // 기존 키워드용 (DB에 있는 키워드)
     @PostMapping("/ai-generate-keywords/{keywordId}")
     @Operation(summary = "기존 키워드에 대한 평가기준을 AI로 생성")
@@ -61,7 +61,7 @@ public class AdminController {
         }
     }
 
-    // 신규 키워드용 (DB에 없는 키워드) - 새로 추가
+    // 신규 키워드용 (DB에 없는 키워드)
     @PostMapping("/ai-generate-keywords/new")
     @Operation(summary = "새로운 키워드에 대한 평가기준을 AI로 생성")
     public ResponseEntity<?> aiGenerateKeywordsForNew(
@@ -78,7 +78,7 @@ public class AdminController {
         }
     }
 
-    // 4. 키워드 수정
+    // 키워드 수정
     @PutMapping("/change-keywords/{keywordId}")
     @Operation(summary = "키워드에 대한 설명 및 평가 기준 수정")
     public ResponseEntity<String> updateKeyword(
@@ -97,7 +97,7 @@ public class AdminController {
         }
     }
 
-    // 5. 키워드 삭제
+    // 키워드 삭제
     @DeleteMapping("/delete-keywords/{keywordId}")
     @Operation(summary = "특정 키워드 및 평가 기준 삭제")
     public ResponseEntity<String> deleteKeyword(@PathVariable Integer keywordId) {

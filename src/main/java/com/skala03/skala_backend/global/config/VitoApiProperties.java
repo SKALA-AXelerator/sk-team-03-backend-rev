@@ -1,4 +1,3 @@
-// VitoApiProperties.java - 외부 설정값 바인딩
 package com.skala03.skala_backend.global.config;
 
 import lombok.Data;

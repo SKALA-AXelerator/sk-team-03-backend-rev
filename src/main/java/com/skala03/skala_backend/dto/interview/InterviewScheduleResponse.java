@@ -10,10 +10,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InterviewScheduleResponse {
-    private Integer sessionId;         // ✅ sessionId 추가
+    private Integer sessionId;         // sessionId 추가
     private String interviewRoom;
     private String interviewTime;
-    private Session.SessionStatus sessionStatus;  // ✅ 추가: 세션 상태
+    private Session.SessionStatus sessionStatus;  // 세션 상태
     private List<ApplicantDto> applicantList;
 
     @Data

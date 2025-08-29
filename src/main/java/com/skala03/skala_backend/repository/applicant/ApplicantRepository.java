@@ -29,7 +29,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
             "ORDER BY q.question_id", nativeQuery = true)
     List<String> findQuestionsByApplicantId(@Param("applicantId") String applicantId);
 
-    // ✅ 올바른 방법: sessions 테이블에서 최대 session_id 조회
+    // sessions 테이블에서 최대 session_id 조회
     @Query(value = "SELECT COALESCE(MAX(session_id), 0) FROM sessions", nativeQuery = true)
     Integer findMaxSessionIdFromSessions();
 
@@ -38,7 +38,7 @@ public interface ApplicantRepository extends JpaRepository<Applicant, String> {
     @Query(value = "UPDATE sessions SET applicants_user_id = :applicantIds WHERE session_id = :sessionId", nativeQuery = true)
     void updateSessionApplicants(@Param("sessionId") Integer sessionId, @Param("applicantIds") String applicantIds);
 
-    // ✅ 기존 세션 정보를 완전히 복사하여 새 세션 생성 (session_id와 applicants_user_id만 다름)
+    // 기존 세션 정보를 완전히 복사하여 새 세션 생성 (session_id와 applicants_user_id만 다름)
     @Modifying
     @Query(value = "INSERT INTO sessions (session_id, room_id, session_name, session_date, session_location, session_time, session_status, interviewers_user_id, applicants_user_id, raw_data_path) " +
             "SELECT ?1, room_id, session_name, session_date, session_location, session_time, session_status, interviewers_user_id, ?2, raw_data_path " +

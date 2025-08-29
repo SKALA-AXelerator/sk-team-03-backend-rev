@@ -1,8 +1,3 @@
-// ========================================
-// 3. SERVICE LAYER - 비즈니스 로직
-// ========================================
-
-// TranscriptionService.java - CompletableFuture 기반 서비스
 package com.skala03.skala_backend.service.interview;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

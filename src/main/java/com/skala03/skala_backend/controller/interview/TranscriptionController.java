@@ -1,8 +1,3 @@
-// ========================================
-// 2. CONTROLLER LAYER - 웹 요청 처리
-// ========================================
-
-// TranscriptionController.java
 package com.skala03.skala_backend.controller.interview;
 
 import com.skala03.skala_backend.dto.interview.TranscriptionDto;

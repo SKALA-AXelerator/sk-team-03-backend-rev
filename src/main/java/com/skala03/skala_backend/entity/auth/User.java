@@ -36,11 +36,11 @@ public class User {
     @Column(name = "user_role", nullable = false)
     private Role userRole;
 
-    // 🏠 1:N – 방장으로서의 InterviewRoom
+    // 1:N – 방장으로서의 InterviewRoom
     @OneToMany(mappedBy = "leader", fetch = FetchType.LAZY)
     private Set<InterviewRoom> leaderRooms = new HashSet<>();
 
-    // 👥 1:N – RoomParticipants
+    // 1:N – RoomParticipants
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RoomParticipant> roomParticipants = new HashSet<>();
     public enum Role {

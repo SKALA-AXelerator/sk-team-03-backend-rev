@@ -29,9 +29,9 @@ public class InterviewerService {
     private final InterviewRoomRepository interviewRoomRepository;
     private final RoomParticipantRepository roomParticipantRepository;
 
-    /**
-     * 면접관이 참여하는 룸별 정보 조회 (간소화 버전)
-     */
+
+     // 면접관이 참여하는 룸별 정보 조회
+
     public InterviewerResponse getRoomsForInterviewer(String userId) {
 
         List<Session> sessions = sessionRepository.findByUserIdInInterviewers(userId);

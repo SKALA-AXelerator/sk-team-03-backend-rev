@@ -1,4 +1,4 @@
-// AdminResultRepository.java
+
 package com.skala03.skala_backend.repository.admin;
 
 import com.skala03.skala_backend.entity.applicant.Applicant;

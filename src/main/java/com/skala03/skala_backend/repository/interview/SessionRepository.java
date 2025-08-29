@@ -28,7 +28,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
 
    /* @Query("SELECT s.sessionId FROM Session s WHERE s.roomId = :roomId AND s.interviewersUserId LIKE %:userId% AND s.sessionStatus IN ('IN_PROGRESS', 'WAITING', 'SCHEDULED') ORDER BY s.sessionStatus DESC, s.sessionDate ASC")
     Optional<Integer> findCurrentSessionIdByRoomAndUser(@Param("roomId") String roomId, @Param("userId") String userId); */
-   // ✅ 수정 (LIMIT 1 추가)
+
    @Query(value = "SELECT s.session_id FROM sessions s WHERE s.room_id = :roomId AND s.interviewers_user_id LIKE %:userId% AND s.session_status = 'WAITING' ORDER BY s.session_date ASC LIMIT 1", nativeQuery = true)
    Optional<Integer> findCurrentSessionIdByRoomAndUser(@Param("roomId") String roomId, @Param("userId") String userId);
 

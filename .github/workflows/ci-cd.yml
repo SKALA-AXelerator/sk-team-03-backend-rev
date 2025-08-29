@@ -44,11 +44,11 @@ jobs:
       - name: Test Summary
         if: always()
         run: |
-          echo "## 🧪 테스트 결과" >> $GITHUB_STEP_SUMMARY
+          echo "## 테스트 결과" >> $GITHUB_STEP_SUMMARY
           if [ ${{ job.status }} == 'success' ]; then
-            echo "✅ 모든 테스트 통과!" >> $GITHUB_STEP_SUMMARY
+            echo "모든 테스트 통과!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ 일부 테스트 실패" >> $GITHUB_STEP_SUMMARY
+            echo "일부 테스트 실패" >> $GITHUB_STEP_SUMMARY
           fi
 
   build-and-push:
@@ -143,13 +143,13 @@ jobs:
       - name: Build Summary
         if: always()
         run: |
-          echo "## 🚀 빌드 및 배포 결과" >> $GITHUB_STEP_SUMMARY
+          echo "## 빌드 및 배포 결과" >> $GITHUB_STEP_SUMMARY
           echo "- 이미지: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:1.0.0-${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Harbor 레지스트리: ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
           if [ ${{ job.status }} == 'success' ]; then
-            echo "- ✅ Harbor 푸시 완료" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Deployment 파일 업데이트 완료" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔄 ArgoCD 자동 동기화 대기 중" >> $GITHUB_STEP_SUMMARY
+            echo "- Harbor 푸시 완료" >> $GITHUB_STEP_SUMMARY
+            echo "- Deployment 파일 업데이트 완료" >> $GITHUB_STEP_SUMMARY
+            echo "- ArgoCD 자동 동기화 대기 중" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ❌ 빌드/푸시 실패" >> $GITHUB_STEP_SUMMARY
+            echo "- 빌드/푸시 실패" >> $GITHUB_STEP_SUMMARY
           fi

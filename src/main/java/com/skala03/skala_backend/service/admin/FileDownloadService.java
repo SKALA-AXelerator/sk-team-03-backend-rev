@@ -19,9 +19,9 @@ public class FileDownloadService {
 
     private final ApplicantRepository applicantRepository;
 
-    /**
-     * 특정 직무의 모든 지원자 PDF 파일들을 ZIP으로 압축
-     */
+
+     // 특정 직무의 모든 지원자 PDF 파일들을 ZIP으로 압축
+
     public ByteArrayOutputStream createPdfZip(String jobRoleId) {
         List<Applicant> applicants = applicantRepository.findByJobRoleIdWithPdfPath(jobRoleId);
 
@@ -32,9 +32,9 @@ public class FileDownloadService {
         return createZipFromUrls(applicants, "pdf");
     }
 
-    /**
-     * 특정 직무의 모든 지원자 QNA 파일들을 ZIP으로 압축
-     */
+
+     // 특정 직무의 모든 지원자 QNA 파일들을 ZIP으로 압축
+
     public ByteArrayOutputStream createQnaZip(String jobRoleId) {
         List<Applicant> applicants = applicantRepository.findByJobRoleIdWithQnaPath(jobRoleId);
 
@@ -45,9 +45,9 @@ public class FileDownloadService {
         return createZipFromUrls(applicants, "qna");
     }
 
-    /**
-     * presigned URL들로부터 파일을 다운로드하여 ZIP 파일 생성
-     */
+
+     // presigned URL들로부터 파일을 다운로드하여 ZIP 파일 생성
+
     private ByteArrayOutputStream createZipFromUrls(List<Applicant> applicants, String fileType) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -75,9 +75,9 @@ public class FileDownloadService {
         return baos;
     }
 
-    /**
-     * 파일 타입에 따라 적절한 URL 반환
-     */
+
+     // 파일 타입에 따라 적절한 URL 반환
+
     private String getFileUrl(Applicant applicant, String fileType) {
         return switch (fileType.toLowerCase()) {
             case "pdf" -> applicant.getIndividualPdfPath();
@@ -86,9 +86,9 @@ public class FileDownloadService {
         };
     }
 
-    /**
-     * presigned URL에서 파일을 다운로드하여 ZIP에 추가
-     */
+
+     // presigned URL에서 파일을 다운로드하여 ZIP에 추가
+
     private void downloadAndAddToZip(ZipOutputStream zipOut, String fileUrl, String applicantName, String applicantId, String fileType)
             throws IOException {
 
@@ -123,9 +123,9 @@ public class FileDownloadService {
         log.info("파일 다운로드 완료: {}", fileName);
     }
 
-    /**
-     * 파일명에서 특수문자 제거
-     */
+
+     // 파일명에서 특수문자 제거
+
     private String sanitizeFileName(String fileName) {
         return fileName.replaceAll("[^a-zA-Z0-9가-힣._-]", "_");
     }

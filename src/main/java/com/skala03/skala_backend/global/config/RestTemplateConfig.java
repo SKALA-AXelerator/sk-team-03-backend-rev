@@ -1,8 +1,3 @@
-// ========================================
-// 4. CONFIGURATION LAYER - 설정
-// ========================================
-
-// RestTemplateConfig.java - HTTP 클라이언트 설정
 package com.skala03.skala_backend.global.config;
 
 import org.springframework.context.annotation.Bean;

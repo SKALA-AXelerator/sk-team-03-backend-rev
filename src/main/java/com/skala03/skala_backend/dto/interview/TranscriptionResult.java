@@ -1,4 +1,3 @@
-// TranscriptionResult.java - Vito API 응답 구조
 package com.skala03.skala_backend.dto.interview;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

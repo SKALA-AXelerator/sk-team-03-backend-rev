@@ -1,4 +1,4 @@
-## deployment.yml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,15 +119,15 @@ spec:
               mountPath: /tmp
             - name: cache
               mountPath: /app/cache
-            - name: upload-temp    # 🆕 추가
+            - name: upload-temp
               mountPath: /app/upload-temp
       volumes:
         - name: tmp
           emptyDir:
-            sizeLimit: 1Gi       # 🆕 크기 제한 추가
+            sizeLimit: 1Gi       # 크기 제한
         - name: cache
           emptyDir:
-            sizeLimit: 1Gi       # 🆕 크기 제한 추가
-        - name: upload-temp      # 🆕 새 볼륨
+            sizeLimit: 1Gi       # 크기 제한
+        - name: upload-temp      # 새 볼륨
           emptyDir:
             sizeLimit: 5Gi
