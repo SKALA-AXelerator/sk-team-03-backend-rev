@@ -6,7 +6,7 @@
 
 - **Language**: Java 17
 - **Framework**: Spring Boot 3.5.0
-- **Database**: MariaDB (Production), H2 (Development)
+- **Database**: MariaDB 
 - **Authentication**: JWT + Spring Security
 - **Documentation**: Swagger/OpenAPI 3
 - **Build Tool**: Gradle
@@ -31,7 +31,7 @@ src/main/java/com/skala03/skala_backend/
 <img width="1230" height="952" alt="image" src="https://github.com/user-attachments/assets/1e4bb4d3-8db8-4342-a1f0-dd78e87d812f" />
 
 
-## 🚀 실행 조건 
+## 📁 실행 조건 
 
 ### 사전 요구사항
 - **Java 17** 이상
@@ -70,7 +70,7 @@ jwt:
 java -jar build/libs/app.jar
 ```
 
-## 📡 주요 API 엔드포인트
+## 📁 주요 API 엔드포인트
 
 ### 인증 API (`/api/auth`)
 - `POST /login` - 로그인
@@ -95,7 +95,7 @@ java -jar build/libs/app.jar
 - `POST /upload-audio` - 음성 파일 업로드
 - `GET /transcription/{transcriptionId}` - 전사 결과 조회
 
-## 📊 주요 데이터베이스 테이블
+## 📁 주요 데이터베이스 테이블
 
 - **users**: 사용자 정보 (ADMIN, INTERVIEWER)
 - **job_roles**: 직무 정보
@@ -103,7 +103,7 @@ java -jar build/libs/app.jar
 - **sessions**: 면접 세션 정보
 - **evaluations**: 평가 결과
 
-## 🧪 테스트 및 문서
+## 📁 테스트 및 문서
 
 ### API 문서
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
